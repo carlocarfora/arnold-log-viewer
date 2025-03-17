@@ -1,0 +1,195 @@
+00:00:00   773MB         | log started Tue Jul 21 15:26:25 2015
+00:00:00   773MB         | Arnold 4.2.7.4 windows icc-14.0.2 oiio-1.5.15 rlm-11.2.2 2015/06/15 09:39:31
+00:00:00   773MB         | host application: MtoA 1.2.3.1 03a85380bec8 (Master) MtoA-1.2.3.1 Maya 2016
+00:00:00   773MB         | running on PC, pid=12188
+00:00:00   773MB         |  1 x Intel(R) Xeon(R) CPU E5-1650 v2 @ 3.50GHz (6 cores, 12 logical) with 32712MB
+00:00:00   773MB         |  Windows 7 Professional Service Pack 1 (version 6.1, build 7601) 
+
+00:00:00   773MB         | [mtoa.session]     Initializing at frame 1.000000
+00:00:00   773MB         | [mtoa] Exporting Arnold options 'defaultArnoldRenderOptions'
+00:00:00   773MB         | [mtoa.extensions]  aiOptions Using translator <built-in>, provided by <built-in>(<built-in>).
+00:00:00   773MB         | [mtoa.session]     defaultArnoldRenderOptions     | Exporting plug defaultArnoldRenderOptions.message for type aiOptions 
+
+00:00:00   773MB         | loading plugin: C:/solidangle/mtoadeploy/2016/shaders/mtoa_shaders.dll ...
+00:00:00   773MB         |  mtoa_shaders.dll: MayaMultiplyDivide uses Arnold 4.2.7.4
+00:00:00   773MB         |  mtoa_shaders.dll: MayaClamp uses Arnold 4.2.7.4
+00:00:00   773MB         |  mtoa_shaders.dll: MayaGammaCorrect uses Arnold 4.2.7.4
+00:00:00   773MB         |  mtoa_shaders.dll: MayaCondition uses Arnold 4.2.7.4
+....
+00:00:00   774MB         |  mtoa_shaders.dll: volume_sample_float uses Arnold 4.2.7.4
+00:00:00   774MB         |  mtoa_shaders.dll: volume_sample_rgb uses Arnold 4.2.7.4
+00:00:00   774MB         |  mtoa_shaders.dll: driver_mplay uses Arnold 4.2.7.4
+00:00:00   774MB         | loaded 90 plugins from 1 lib(s) in 0:00.00 
+
+00:00:00   810MB         | [rlm] checkout of "arnold 20150615" in progress ...
+00:00:00   810MB         | [rlm] checkout of "arnold 20150615" from server PC in 0:00.01
+00:00:00   810MB         | [rlm] expiration date: 31-dec-2015 (164 days left)  
+
+00:00:00    56MB         |
+00:00:00    63MB         | [color_manager_syncolor] Using syncolor_color_manager Version 2018.0.80
+00:00:00    63MB         |                          with the native catolog directory from /path/to/synColor
+00:00:00    63MB         |                          and the optional custom catalog directory from /other/path/to/Shared/ 
+
+00:00:00   818MB         | there are 1 light and 2 objects:
+00:00:00   818MB         |       1 persp_camera
+00:00:00   818MB         |       1 distant_light
+00:00:00   818MB         |       1 utility
+00:00:00   818MB         |       1 lambert
+00:00:00   818MB         |       1 driver_exr
+00:00:00   818MB         |       1 gaussian_filter
+00:00:00   818MB         |       1 polymesh
+00:00:00   818MB         |       1 list_aggregate
+00:00:00   818MB         |       1 MayaShadingEngine
+00:00:00   818MB         |       1 renderview_display  
+00:00:00   818MB         |       1 color_manager_syncolor  
+
+00:00:00   818MB         | rendering image at 640 x 480, 3 AA samples
+00:00:00   818MB         |   AA sample clamp   <disabled>
+00:00:00   818MB         |   diffuse           samples  3 / depth  1
+00:00:00   818MB         |   specular          samples  3 / depth  2
+00:00:00   818MB         |   transmission      samples  1 / depth  2
+00:00:00   818MB         |   volume indirect   <disabled by depth>
+00:00:00   818MB         |   total                          depth 10
+00:00:00   818MB         |   bssrdf            <disabled>
+00:00:00   818MB         |   transparency      depth 10 / fast opacity off 
+
+00:00:00   818MB         |  initializing 11 nodes ...
+00:00:00   818MB         |   creating root object list ...
+00:00:00   818MB         |   scene bounds: (-0.995465517 -1.01209259 -0.995465755) -> (1.00453472 0.98790741 1.00453484)
+00:00:00   818MB         |  node initialization done in 0:00.00 (single-threaded)
+00:00:00   818MB         |  updating 12 nodes ...
+00:00:00   818MB         |   directionalLightShape1: distant_light using 1 sample
+00:00:00   818MB         |  node update done in 0:00.00 (single-threaded)
+
+00:00:00   818MB         |  [aov] parsing output statement: "RGBA RGBA defaultArnoldFilter@gaussian_filter defaultArnoldDisplayDriver@renderview_display"
+00:00:00   818MB         |  [aov] parsing output statement: "RGBA RGBA defaultArnoldFilter@gaussian_filter defaultArnoldDriver@driver_exr.RGBA"
+00:00:00   818MB         |  [aov] registered driver: "defaultArnoldDisplayDriver@renderview_display" (renderview_display)
+00:00:00   818MB         |  [aov]  * "RGBA" of type RGBA filtered by "defaultArnoldFilter@gaussian_filter" (gaussian_filter)
+00:00:00   818MB         |  [aov] registered driver: "defaultArnoldDriver@driver_exr.RGBA" (driver_exr)
+00:00:00   818MB         |  [aov]  * "RGBA" of type RGBA filtered by "defaultArnoldFilter@gaussian_filter" (gaussian_filter)
+00:00:00   818MB         |  [aov] done preparing 1 AOV for 2 outputs to 2 drivers (0 deep AOVs) 
+
+00:00:00   825MB         |  starting 12 bucket workers of size 64x64 ...
+00:00:00   835MB         |     0% done - 9 rays/pixel
+00:00:00   835MB         |   [accel] bvh4 done - 0:00.00 - 400 prims, 1 key
+00:00:00   836MB         |     5% done - 9 rays/pixel
+00:00:00   836MB         |    10% done - 9 rays/pixel
+00:00:00   836MB         |    15% done - 9 rays/pixel
+00:00:00   837MB         |    20% done - 9 rays/pixel
+00:00:00   837MB         |    25% done - 9 rays/pixel
+00:00:00   837MB         |    30% done - 9 rays/pixel
+00:00:00   837MB         |    35% done - 10 rays/pixel
+00:00:00   837MB         |    40% done - 10 rays/pixel
+00:00:00   838MB         |    45% done - 12 rays/pixel
+00:00:00   838MB         |    50% done - 12 rays/pixel
+00:00:00   838MB         |    55% done - 13 rays/pixel
+00:00:00   838MB         |    60% done - 13 rays/pixel
+00:00:00   838MB         |    65% done - 13 rays/pixel
+00:00:00   838MB         |    70% done - 13 rays/pixel
+00:00:00   838MB         |    75% done - 13 rays/pixel
+00:00:00   838MB         |    80% done - 13 rays/pixel
+00:00:00   838MB         |    85% done - 13 rays/pixel
+00:00:00   838MB         |    90% done - 13 rays/pixel
+00:00:00   838MB         |    95% done - 13 rays/pixel
+00:00:00   838MB         |   100% done - 13 rays/pixel
+00:00:00   824MB         |  bucket workers done in 0:00.38 
+
+00:00:00   821MB         | scene creation time:
+00:00:00   821MB         |  plugin loading               0:00.07
+00:00:00   821MB         |  system/unaccounted           0:00.12
+00:00:00   821MB         |  total                        0:00.12  ( 1.05% machine utilization) 
+
+00:00:00   821MB         | render time:
+00:00:00   821MB         |  node init                    0:00.00
+00:00:00   821MB         |   sanity checks               0:00.00
+00:00:00   821MB         |  bucket rendering             0:00.38
+00:00:00   821MB         |   mesh processing             0:00.00
+00:00:00   821MB         |   accel. building             0:00.00
+00:00:00   821MB         |   pixel rendering             0:00.38  (multi-threaded render, this value may not be reliable)
+00:00:00   821MB         |  system/unaccounted           0:00.17
+00:00:00   821MB         |  total                        0:00.55  (69.23% machine utilization) 
+
+00:00:00   821MB         | memory consumed in MB:
+00:00:00   821MB         |  at startup                    807.25
+00:00:00   821MB         |  plugins                         2.52
+00:00:00   821MB         |  AOV samples                    11.67
+00:00:00   821MB         |  output buffers                  5.32
+00:00:00   821MB         |  node overhead                   0.00
+00:00:00   821MB         |  message passing                 0.02
+00:00:00   821MB         |  memory pools                   13.54
+00:00:00   821MB         |  geometry                        0.01
+00:00:00   821MB         |    polymesh                      0.01
+00:00:00   821MB         |  accel. structs                  0.02
+00:00:00   821MB         |  strings                         0.30
+00:00:00   821MB         |  texture cache                   0.00
+00:00:00   821MB         |  unaccounted                     1.64
+00:00:00   821MB         |  total peak                    842.29 
+
+00:00:00   821MB         | ray counts:                           (/pixel, /sample) (% total) (avg. hits) (max hits)
+00:00:00   821MB         |  camera                       2318256 (   8.71,    1.00) ( 64.57%) (     0.11) (       1)
+00:00:00   821MB         |  shadow                        228076 (   0.86,    0.10) (  6.35%) (     0.00) (       0)
+00:00:00   821MB         |  diffuse                      1043914 (   3.92,    0.45) ( 29.08%) (     0.00) (       0)
+00:00:00   821MB         |  total                        3590246 (  13.48,    1.55) (100.00%) (     0.07) (       1)
+00:00:00   821MB         |  max depth                          1 
+
+00:00:00   821MB         | shader calls:                         (/pixel, /sample) (% total)
+00:00:00   821MB         |  primary                       523006 (   1.96,    0.23) (100.00%)
+00:00:00   821MB         |  total                         523006 (   1.96,    0.23) (100.00%) 
+
+00:00:00   821MB         | geometry:                             (% hit ) (instances) (  init mem,  final mem)
+00:00:00   821MB         |  lists                              1 (100.0%) (        0) (      0.00,       0.00)
+00:00:00   821MB         |  polymeshes                         1 (100.0%) (        0) (      0.02,       0.01)
+00:00:00   821MB         | -----------------------------------------------------------------------------------------
+00:00:00   821MB         | geometric elements:                   (      min) (       avg.) (      max)
+00:00:00   821MB         |  objects (top level)                1 (        1) (        1.0) (        1)
+00:00:00   821MB         |  polygons                         400 (      400) (      400.0) (      400)
+00:00:00   821MB         | -----------------------------------------------------------------------------------------
+00:00:00   821MB         | triangle tessellation:                (      min) (       avg.) (      max) (/ element) (% total)
+00:00:00   821MB         |  polymeshes                       760 (      760) (      760.0) (      760) (     1.90) (100.00%)
+00:00:00   821MB         |  unique triangles:                760
+00:00:00   821MB         |  memory use (in MB)              0.01
+00:00:00   821MB         |    vertices                      0.00
+00:00:00   821MB         |    vertex indices                0.00
+00:00:00   821MB         |    packed normals                0.00
+00:00:00   821MB         |    normal indices                0.00
+00:00:00   821MB         |    uv coords                     0.00
+00:00:00   821MB         |    uv coords idxs                0.00
+00:00:00   821MB         |    uniform indices               0.00
+00:00:00   821MB         |    userdata                      0.00
+00:00:00   821MB         |  largest polymeshes by triangle count:
+00:00:00   821MB         |          760 tris -- pSphereShape1 
+00:00:00   841MB         | OpenImageIO Texture statistics
+00:00:00   841MB         |   Queries/batches : 
+00:00:00   841MB         |     texture     :  261503 queries in 261503 batches
+00:00:00   841MB         |     texture 3d  :  0 queries in 0 batches
+00:00:00   841MB         |     shadow      :  0 queries in 0 batches
+00:00:00   841MB         |     environment :  0 queries in 0 batches
+00:00:00   841MB         |   Interpolations :
+00:00:00   841MB         |     closest  : 0
+00:00:00   841MB         |     bilinear : 398256
+00:00:00   841MB         |     bicubic  : 701789
+00:00:00   841MB         |   Average anisotropic probes : 2.8
+00:00:00   841MB         |   Max anisotropy in the wild : 671
+00:00:00   841MB         | 
+00:00:00   841MB         | OpenImageIO ImageCache statistics (000000003D574040) ver 1.5.15
+00:00:00   841MB         |   Images : 1 unique
+00:00:00   841MB         |     ImageInputs : 1 created, 1 current, 1 peak
+00:00:00   841MB         |     Total size of all images referenced : 1.7 MB
+00:00:00   841MB         |     Read from disk : 1.7 MB
+00:00:00   841MB         |     File I/O time : 0.2s (0.0s average per thread)
+00:00:00   841MB         |     File open time only : 0.0s
+00:00:00   841MB         |   Tiles: 25 created, 24 current, 24 peak
+00:00:00   841MB         |     total tile requests : 1454328
+00:00:00   841MB         |     micro-cache misses : 35383 (2.43294%)
+00:00:00   841MB         |     main cache misses : 25 (0.00171901%)
+00:00:00   841MB         |     Peak cache memory : 2.3 MB
+00:00:00   841MB         |   Image file statistics:
+00:00:00   841MB         |         opens   tiles  MB read  I/O time  res              File
+00:00:00   841MB         |       1    1       12      1.7      0.2s   768x 768x3.u8   C:/Users/Documents/example.tif UNTILED UNMIPPED MIP-COUNT [12,7,3,2,1,0,0,0,0,0]
+00:00:00   841MB         | 
+00:00:00   841MB         |   Tot:     1       12      1.7      0.2s
+00:00:00   841MB         |   1 not tiled, 1 not MIP-mapped 
+00:00:00   841MB         | releasing resources
+00:00:00   831MB         |  unloading 27 plugins
+00:00:00   829MB         |  unloading plugins done
+00:00:00   828MB         | Arnold shutdown 
