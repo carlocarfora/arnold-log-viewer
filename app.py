@@ -23,9 +23,12 @@ def main():
     if True:
         try:
             parser = ArnoldLogParser(log_content)
-            st.divider()
+    
+            # Errors and Warnings
+            st.header("🚨 Errors / Warnings", divider=True)
+
             # Arnold worker information tab
-            st.subheader("💻 Worker Info")
+            st.header("💻 Worker Info", divider=True)
             specs = parser.get_system_specs()
             arnold_info = parser.get_arnold_info()
 
@@ -60,10 +63,8 @@ def main():
                 else:
                     st.write("Not found")
 
-            st.divider()
-
             # Arnold and Host Application Tab
-            st.subheader("🎮 Arnold & Host")
+            st.header("🎮 Arnold & Host", divider=True)
 
             # Plugin information
             st.subheader("Plugin Information")
@@ -73,30 +74,31 @@ def main():
 
             st.metric("Plugins Loaded", plugin_info['count'])
 
-            if plugin_info['loaded']:
-                with st.expander("View Loaded Plugins"):
-                    for plugin in plugin_info['loaded']:
-                        st.write(f"• {plugin}")
-            else:
-                st.info("No plugins were loaded")
-
-            st.divider()
+            with st.expander("View Loaded Plugins"):
+                for plugin in plugin_info['loaded']:
+                    st.write(f"• {plugin}")
             
             # Scene Details
-            st.subheader("🎨 Scene Details")
+            st.header("🎨 Scene Details", divider=True)
 
             scene_contents = parser.get_scene_contents()
 
             # Basic scene info
-            st.header("Scene Configuration")
-            cols = st.columns(3)
+            st.subheader("Resolution and Samples")
+            cols = st.columns(9)
 
             cols[0].metric("Resolution", scene_contents['resolution'])
             cols[1].metric("AA Samples", scene_contents['aa_samples'])
-            cols[2].metric("Camera", scene_contents['camera'])
-            st.write("HELLO")
+            cols[2].metric("Diffuse", scene_contents['aa_samples'])
+            cols[3].metric("Specular", scene_contents['aa_samples'])
+            cols[4].metric("Transmission",  scene_contents['aa_samples'])
+            cols[5].metric("Volume", scene_contents['aa_samples'])
+            cols[6].metric("Total", scene_contents['aa_samples'])
+            cols[7].metric("BSSRDF", scene_contents['aa_samples'])
+            cols[8].metric("Transparency", scene_contents['aa_samples']) 
+
             # Ray Depths
-            st.header("Ray Depths")
+            st.subheader("Ray Depths")
             cols = st.columns(3)
 
             cols[0].metric("Diffuse Depth",
@@ -112,14 +114,14 @@ def main():
             cols[1].metric("Total GI Depth", scene_contents['total_depth'])
 
             # Node initialization
-            st.header("Scene Initialization")
+            st.subheader("Scene Initialization")
             cols = st.columns(2)
             cols[0].metric("Total Nodes", scene_contents['node_count'])
             cols[1].metric("Init Time",
                             f"{scene_contents['init_time']:.2f}s")
 
             # Geometry statistics
-            st.header("Geometry")
+            st.subheader("Geometry")
             geo_stats = parser.get_geometry_stats()
             cols = st.columns(2)
 
@@ -133,7 +135,7 @@ def main():
                             geo_stats['subdivision_surfaces'])
 
             # Texture statistics
-            st.header("Textures")
+            st.subheader("Textures")
             tex_stats = parser.get_texture_stats()
             cols = st.columns(2)
             cols[0].metric("Texture Count", tex_stats['texture_count'])
@@ -143,11 +145,9 @@ def main():
                 with st.expander("⚠️ Missing Textures"):
                     for tex in tex_stats['missing_textures']:
                         st.warning(f"Missing: {tex}")
-
-            st.divider()
             
             # Performance
-            st.subheader("📊 Performance")
+            st.header("📊 Performance", divider=True)
  
             render_stats = parser.get_render_stats()
             memory_stats = parser.get_memory_stats()
@@ -188,8 +188,9 @@ def main():
         This tool helps you analyze Arnold render logs quickly and efficiently.
 
         The analysis is organized into four main sections:
-        - 💻 System Info: Hardware specifications
-        - 🎮 Arnold & Host: Software versions and plugins
+        - 🚨 Errors / Warnings: Overview of errors and warnings
+        - 💻 Worker Info: Hardware specifications
+        - 🎮 Arnold Config / Plugins: Software versions and plugins
         - 🎨 Scene Details: Scene configuration and assets
         - 📊 Performance: Render times and resource usage
         """)
