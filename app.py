@@ -12,8 +12,6 @@ Version: 0.1.0
 
 # IMPORTS
 # =========================
-from email import errors
-from turtle import title
 import streamlit as st
 import plotly.graph_objects as go
 from log_parser import ArnoldLogParser
