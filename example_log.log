@@ -24,6 +24,7 @@
 00:00:00   810MB         | [rlm] checkout of "arnold 20150615" in progress ...
 00:00:00   810MB         | [rlm] checkout of "arnold 20150615" from server PC in 0:00.01
 00:00:00   810MB         | [rlm] expiration date: 31-dec-2015 (164 days left)  
+00:00:00   810MB WARNING | [rlm] could not connect to license server on 5053@localhost 
 
 00:00:00    56MB         |
 00:00:00    63MB         | [color_manager_syncolor] Using syncolor_color_manager Version 2018.0.80
