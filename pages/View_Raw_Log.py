@@ -1,35 +1,59 @@
-import streamlit as st
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-# Page Config
+"""
+Script Name: arnold-log-viewer.py
+Description: Arnold render log viewer pretty formatted to be easier to view.
+Author: Carlo Carfora
+Date: 20/03/2025
+Version: 0.1.0
+"""
+
+# IMPORTS
+# =========================
+import streamlit as st
+from app import sidebar
+
+# GLOBALS / CONSTANTS
+# =========================
+
+
+# FUNCTIONS
+# =========================
+
+
+# PAGE CONFIGURATION
+# =========================
 st.set_page_config(page_title="Raw Log File",  layout="wide")
 
-# Set the page title
-st.title("Raw Log File")
 
-# Use the existing log file variable from the main page
-log_file = st.session_state.shared_log
+# MAIN FUNCTION
+# =========================
+def main():
+    """
+    Main function for the app.
+    """
+    st.title("Raw Log File")
 
-if log_file:
-    try:
-        # Display the content with syntax highlighting
-        st.code(log_file, language="bash", line_numbers=True)
-    except FileNotFoundError:
-        st.error(f"Log file not found at: {log_file}")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-else:
-    st.warning("No log file has been uploaded or selected.")
+    # Use the existing log file variable from the main page
+    log_file = st.session_state.shared_log
 
-# Add information about usage
-with st.sidebar:        
-    st.subheader("About")
-    st.write("""
-    This tool helps you analyze Arnold render logs quickly and efficiently.
+    if log_file:
+        try:
+            # Display the content with syntax highlighting
+            st.code(log_file, language="bash", line_numbers=True)
+        except FileNotFoundError:
+            st.error(f"Log file not found at: {log_file}")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+    else:
+        st.warning("No log file has been uploaded or selected.")
 
-    The analysis is organized into four main sections:
-    - 🚨 Errors / Warnings: Overview of errors and warnings
-    - 💻 Worker Info: Hardware specifications
-    - 🎮 Arnold Config / Plugins: Software versions and plugins
-    - 🎨 Scene Details: Scene configuration and assets
-    - 📊 Performance: Render times and resource usage
-    """)
+# Add sidebar
+sidebar()
+
+
+# RUN THE APP
+# =========================
+if __name__ == "__main__":
+    main()
