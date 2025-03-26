@@ -36,14 +36,14 @@
   <p align="center">
     Arnold Log Viewer is a lightweight tool for parsing, filtering, and visualizing Arnold renderer logs to streamline debugging and optimization. 
     <br />
-    <a href="https://github.com/carlo_carfora/arnold-log-viewer"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/carlocarfora/arnold-log-viewer"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/carlo_carfora/arnold-log-viewer">View Demo</a>
+    <a href="https://carlocarfora-arnold-log-viewer-app-c0imqg.streamlit.app/">View Demo</a>
     &middot;
-    <a href="https://github.com/carlo_carfora/arnold-log-viewer/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/carlocarfora/arnold-log-viewer/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     &middot;
-    <a href="https://github.com/carlo_carfora/arnold-log-viewer/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/carlocarfora/arnold-log-viewer/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -108,7 +108,7 @@ To get a local copy up and running follow these simple steps.
 
 1. Clone the repo:
     ```sh
-    git clone https://github.com/carlo_carfora/arnold-log-viewer.git
+    git clone https://github.com/carlocarfora/arnold-log-viewer.git
     ```
 2. Install packages from `requirements.txt`
     ```sh
@@ -146,7 +146,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 - [ ] Connect parsed information to UI
 - [ ] Call it a feature release
 
-See the [open issues](https://github.com/carlo_carfora/arnold-log-viewer/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/carlocarfora/arnold-log-viewer/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -170,7 +170,7 @@ Don't forget to give the project a star! Thanks again!
 
 ### Top contributors:
 
-<a href="https://github.com/carlo_carfora/arnold-log-viewer/graphs/contributors">
+<a href="https://github.com/carlocarfora/arnold-log-viewer/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=carlo_carfora/arnold-log-viewer" alt="contrib.rocks image" />
 </a>
 
@@ -190,7 +190,7 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 
 Your Name - [@carlo_carfora](https://twitter.com/carlo_carfora) - email@email_client.com
 
-Project Link: [https://github.com/carlo_carfora/arnold-log-viewer](https://github.com/carlo_carfora/arnold-log-viewer)
+Project Link: [https://github.com/carlocarfora/arnold-log-viewer](https://github.com/carlocarfora/arnold-log-viewer)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -210,15 +210,15 @@ Project Link: [https://github.com/carlo_carfora/arnold-log-viewer](https://githu
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
-[contributors-url]: https://github.com/carlo_carfora/arnold-log-viewer/graphs/contributors
+[contributors-url]: https://github.com/carlocarfora/arnold-log-viewer/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
-[forks-url]: https://github.com/carlo_carfora/arnold-log-viewer/network/members
+[forks-url]: https://github.com/carlocarfora/arnold-log-viewer/network/members
 [stars-shield]: https://img.shields.io/github/stars/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
-[stars-url]: https://github.com/carlo_carfora/arnold-log-viewer/stargazers
+[stars-url]: https://github.com/carlocarfora/arnold-log-viewer/stargazers
 [issues-shield]: https://img.shields.io/github/issues/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
-[issues-url]: https://github.com/carlo_carfora/arnold-log-viewer/issues
+[issues-url]: https://github.com/carlocarfora/arnold-log-viewer/issues
 [license-shield]: https://img.shields.io/github/license/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
-[license-url]: https://github.com/carlo_carfora/arnold-log-viewer/blob/master/LICENSE.txt
+[license-url]: https://github.com/carlocarfora/arnold-log-viewer/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/carlocarfora
 [Python]: https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=fff
