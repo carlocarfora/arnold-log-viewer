@@ -1,31 +1,10 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a id="readme-top"></a>
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Don't forget to give the project a star!
-*** Thanks again! Now go create something AMAZING! :D
--->
 
-
-
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![project_license][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
-
-
 
 <!-- PROJECT LOGO -->
 <br />
@@ -46,7 +25,6 @@
     <a href="https://github.com/carlocarfora/arnold-log-viewer/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
-
 
 
 <!-- TABLE OF CONTENTS -->
@@ -76,7 +54,6 @@
 </details>
 
 
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
@@ -85,14 +62,12 @@ Arnold Log Viewer is a lightweight and user-friendly application designed to hel
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
 ### Built With
 
-* [![Python][Python]][python-url]
-* [![Streamlit][Streamlit]][streamlit-url]
+[![Python][Python]][python-url]  
+[![Streamlit][Streamlit]][streamlit-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- GETTING STARTED -->
@@ -130,9 +105,8 @@ To get a local copy up and running follow these simple steps.
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-In progress...
+Drop a text file of an Arnold log into the app or copy/paste an Arnold log into the text area.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -149,7 +123,6 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 See the [open issues](https://github.com/carlocarfora/arnold-log-viewer/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- CONTRIBUTING -->
@@ -171,9 +144,8 @@ Don't forget to give the project a star! Thanks again!
 ### Top contributors:
 
 <a href="https://github.com/carlocarfora/arnold-log-viewer/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=carlo_carfora/arnold-log-viewer" alt="contrib.rocks image" />
+  <img src="https://contrib.rocks/image?repo=carlocarfora/arnold-log-viewer" alt="contrib.rocks image" />
 </a>
-
 
 
 <!-- LICENSE -->
@@ -184,27 +156,24 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@carlo_carfora](https://twitter.com/carlo_carfora) - email@email_client.com
+[@carlo_carfora](https://twitter.com/carlo_carfora)
 
-Project Link: [https://github.com/carlocarfora/arnold-log-viewer](https://github.com/carlocarfora/arnold-log-viewer)
+[https://github.com/carlocarfora/arnold-log-viewer](https://github.com/carlocarfora/arnold-log-viewer)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- ACKNOWLEDGMENTS -->
+<!--
 ## Acknowledgments
-
 * []()
 * []()
 * []()
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+ -->
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
