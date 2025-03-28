@@ -209,15 +209,15 @@ Project Link: [https://github.com/carlocarfora/arnold-log-viewer](https://github
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/carlocarfora/arnold-log-viewer.svg?style=for-the-badge
 [contributors-url]: https://github.com/carlocarfora/arnold-log-viewer/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/carlocarfora/arnold-log-viewer.svg?style=for-the-badge
 [forks-url]: https://github.com/carlocarfora/arnold-log-viewer/network/members
-[stars-shield]: https://img.shields.io/github/stars/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/carlocarfora/arnold-log-viewer.svg?style=for-the-badge
 [stars-url]: https://github.com/carlocarfora/arnold-log-viewer/stargazers
-[issues-shield]: https://img.shields.io/github/issues/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/carlocarfora/arnold-log-viewer.svg?style=for-the-badge
 [issues-url]: https://github.com/carlocarfora/arnold-log-viewer/issues
-[license-shield]: https://img.shields.io/github/license/carlo_carfora/arnold-log-viewer.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/carlocarfora/arnold-log-viewer.svg?style=for-the-badge
 [license-url]: https://github.com/carlocarfora/arnold-log-viewer/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/carlocarfora
