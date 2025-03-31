@@ -11,7 +11,10 @@ Version: 0.1.0
 
 # IMPORTS
 # =========================
+from locale import normalize
 import streamlit as st
+import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from log_parser import ArnoldLogParser
 
@@ -48,6 +51,29 @@ def sidebar():
         - [Reading an Arnold Log](https://help.autodesk.com/view/ARNOL/ENU/?guid=arnold_user_guide_ac_rendering_ac_render_log_html)
         """
         )
+
+
+def display_bar_chart(
+    values, _index, _x_label, _stack="normalize", _horizontal=True, convert_values=True
+    ):
+    """
+    Display a bar chart using built in Streamlit chart.
+    Parameters:
+    labels (list): The labels for the chart.
+    values (list): The values for the chart.
+    x_label (str): The x-axis label.
+    """
+    if convert_values:
+        df = pd.DataFrame(values, index=[str(_index)])
+    else:
+        df = values
+
+    st.bar_chart(
+        df,
+        x_label=_x_label,
+        y_label=None,
+        horizontal=_horizontal, 
+        stack=_stack)
 
 
 def display_donut_chart(labels, values):
@@ -148,47 +174,47 @@ def main():
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
+        st.subheader("Frame Number")
+        st.write("1001")
+
+    with col2:
         st.subheader("Camera")
         st.write("shotcam1")
 
-    with col2:
+    with col3:
         st.subheader("Resolution")
         st.write("640 x 480")
 
-    with col3:
-        st.subheader("Render Time")
-        st.write("1h 30m")
-
     with col4:
-        st.subheader("Ram Used")
-        st.write("Maya 2022")
+        st.subheader("File Size")
+        st.write("200MB")
 
     with col5:
-        st.subheader("AOV Count")
-        st.write("Not found")
+        st.subheader("Date / Time")
+        st.write("2025-03-20 12:00:00")
 
     # Row 2 for information
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        st.subheader("Ass File Size")
-        st.write("shotcam1")
+        st.subheader("Render Time")
+        st.write("00:00:01:30")
 
     with col2:
-        st.subheader("Resolution")
-        st.write("640 x 480")
+        st.subheader("Memory Used")
+        st.write("2GB")
 
     with col3:
-        st.subheader("Render Time")
-        st.write("1h 30m")
+        st.subheader("AOV Count")
+        st.write("30")
 
     with col4:
-        st.subheader("Ram Used")
-        st.write("Maya 2022")
+        st.subheader("CPU/GPU")
+        st.write("CPU")
 
     with col5:
-        st.subheader("AOV Count")
-        st.write("Not found")
+        st.subheader("Output File")
+        st.write("/path/to/output/file.exr")
 
     # Arnold worker information tab
     st.header("💻 Worker Info", divider=True)
@@ -274,18 +300,77 @@ def main():
     # Render time
     st.subheader("Render Time")
 
+    render_time_stats = {
+        "Loading Assets": 10,
+        "Geometry Processing": 15,
+        "Shading": 25,
+        "Rendering": 40,
+        "Denoising": 20
+    }
+
+    display_bar_chart(
+        render_time_stats,
+        "Render Time",
+        "Render time as percentage"
+        )
+
     # Memory Statistics
     st.subheader("Memory")
+    cols = st.columns(4)
+    cols[0].metric("Peak CPU Memory used","3784.42")
+    cols[1].metric("Startup Memory used", "2290.95")
+    cols[2].metric("Geometry Memory used","36.70")
+    cols[3].metric("Texture Memory used", "242.10")
+    memory_stats = {
+        "peak CPU memory used  ": 3784.42,
+        "at startup            ": 2290.95,
+        "AOV samples           ": 1.24,
+        "output buffers        ": 3.27,
+        "framebuffers          ": 35.16,
+        "node overhead         ": 0.00,
+        "message passing       ": 0.13,
+        "memory pools          ": 130.52,
+        "geometry              ": 36.70,
+        "polymesh              ": 16.10,
+        "vertices              ": 8.74,
+        "vertex indices        ": 6.81,
+        "packed normals        ": 2.91,
+        "normal indices        ": 3.38,
+        "uv coords             ": 1.56,
+        "uv coords idxs        ": 5.79,
+        "P reference (autobump)": 4.45,
+        "N reference (autobump)": 1.48,
+        "uniform indices       ": 1.57,
+        "userdata              ": 0.00,
+        "subdivs               ": 20.59,
+        "accel structs         ": 21.59,
+        "skydome importance map": 15.60,
+        "strings               ": 24.50,
+        "texture cache         ": 242.10,
+        "profiler              ": 17.87,
+        "backtrace handler     ": 354.21,
+        "unaccounted           ": 610.61,
+    }
 
+    display_bar_chart(
+        memory_stats,
+        "Memory Used",
+        "Memory used in MB",
+        _stack=False,
+        _horizontal=True,
+        convert_values=False
+    )
+    
     # Ray Stats
     st.subheader("Rays")
-    cols = st.columns(2)
-    with cols[0]:
-        display_donut_chart(
-            labels=["Camera", "Shadow", "Diffuse", "Refraction"],
-            values=[10, 20, 30, 40],
-        )
-    cols[1].metric("Total", scene_contents["aa_samples"])
+    ray_stats = {
+        "Camera": 2318256,
+        "Shadow": 228076,
+        "Diffuse": 1043914,
+        "Total": 3590246
+    }
+
+    display_bar_chart(ray_stats, "Rays", "Rays counts per pixel")
 
     # Shader Stats
     st.subheader("Shaders")
