@@ -54,8 +54,14 @@ def sidebar():
 
 
 def display_bar_chart(
-    values, _index, _x_label, _stack="normalize", _horizontal=True, convert_values=True
-    ):
+    values,
+    _index,
+    _x_label,
+    _y_label=None,
+    _stack="normalize",
+    _horizontal=True,
+    convert_values=True,
+):
     """
     Display a bar chart using built in Streamlit chart.
     Parameters:
@@ -71,7 +77,7 @@ def display_bar_chart(
     st.bar_chart(
         df,
         x_label=_x_label,
-        y_label=None,
+        y_label=_y_label,
         horizontal=_horizontal, 
         stack=_stack)
 
@@ -169,35 +175,38 @@ def main():
 
     # Render Stats
     st.header("📊 Render Info", divider=True)
+    render_stats = parser.get_render_info()
 
+    st.write(render_stats)
+    
     # Row 1 for information
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.subheader("Frame Number")
-        st.write("1001")
+        st.write(render_stats["frame_number"])
 
     with col2:
         st.subheader("Camera")
-        st.write("shotcam1")
+        st.write(render_stats["camera"])
 
     with col3:
         st.subheader("Resolution")
-        st.write("640 x 480")
+        st.write(render_stats["resolution"])
 
     with col4:
         st.subheader("File Size")
-        st.write("200MB")
+        st.write(render_stats["file_size"])
 
     with col5:
         st.subheader("Date / Time")
-        st.write("2025-03-20 12:00:00")
+        st.write(render_stats["date_time"])
 
     # Row 2 for information
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        st.subheader("Render Time")
+        st.subheader("Total Render Time")
         st.write("00:00:01:30")
 
     with col2:
@@ -294,8 +303,50 @@ def main():
     cols[2].metric("BSSRDF", scene_contents["aa_samples"])
     cols[3].metric("Transparency", scene_contents["aa_samples"])
 
+    # Render Progress
+    st.subheader("Render Progress")
+    progress_stats = {
+        "005%": 9,
+        "010%": 9,
+        "015%": 9,
+        "020%": 9,
+        "025%": 9,
+        "030%": 9,
+        "035%": 10,
+        "040%": 10,
+        "045%": 12,
+        "050%": 12,
+        "055%": 13,
+        "060%": 130,
+        "065%": 13,
+        "070%": 13,
+        "075%": 13,
+        "080%": 13,
+        "085%": 13,
+        "090%": 13,
+        "095%": 13,
+        "100%": 13,
+    }
+
+    display_bar_chart(
+        progress_stats,
+        "Rays Per Pixel",
+        "% of total ray count",
+    )    
+
     # Scene creation time
     st.subheader("Scene Creation")
+    scene_creation_stats = {
+        "plugin loading": 10,
+        "system/unaccounted": 15,
+        "total": 25
+    }
+
+    display_bar_chart(
+        scene_creation_stats,
+        "Time",
+        "Time as percentage"
+        )
 
     # Render time
     st.subheader("Render Time")
@@ -321,6 +372,7 @@ def main():
     cols[1].metric("Startup Memory used", "2290.95")
     cols[2].metric("Geometry Memory used","36.70")
     cols[3].metric("Texture Memory used", "242.10")
+    # cull low memory stats with a tickbox to show it
     memory_stats = {
         "peak CPU memory used  ": 3784.42,
         "at startup            ": 2290.95,
@@ -360,7 +412,7 @@ def main():
         _horizontal=True,
         convert_values=False
     )
-    
+
     # Ray Stats
     st.subheader("Rays")
     ray_stats = {

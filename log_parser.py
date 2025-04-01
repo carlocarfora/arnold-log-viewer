@@ -8,7 +8,87 @@ class ArnoldLogParser:
 
     def __init__(self, log_content: str):
         self.log_content = log_content
-        self.lines = log_content.split('\n')
+        self.lines = log_content.splitlines()
+
+    def get_render_info(self) -> Dict[str, str]:
+        """Get render information."""
+        data = {
+            "frame_number": "not found",
+            "camera": "",
+            "resolution": "",
+            "file_size": 0,
+            "date_time": "",
+            "render_time": 0,
+            "memory_used": 0,
+            "aov_count": 0,
+            "cpu_gpu": "",
+            "output_file": "",
+        }
+    
+        # Regex patterns for extracting information
+        pattern = {
+            "frame_number": r"rendering frame\(s\): (\d+)",
+            "camera": r"camera\s+\"([^\"]+)\"",
+            "resolution": r"rendering\s+image\s+at\s+(\d+)\s+x\s+(\d+)",
+            "file_size": r"file size:\s+([\d.]+)\s*(MB|GB)",
+            "date_time": r"rendered on:\s+(.*)",
+            "memory_used": r"memory used:\s+([\d.]+)\s*(MB|GB)",
+            "aov_count": r"AOV count:\s+(\d+)",
+            "cpu_gpu": r"using\s+(CPU|GPU)",
+            "output_file": r"output file:\s+(.*)"
+        }
+
+        # Iterate through each line and apply regex patterns
+        for line in self.lines:
+            #frame number
+            match = re.search(pattern["frame_number"], line)
+            if match:
+                data["frame_number"] = match.group(1)
+            #camera
+            match = re.search(pattern["camera"], line)
+            if match:
+                data["camera"] = match.group(1)
+            #resolution
+            match = re.search(pattern["resolution"], line)
+            if match:
+                data["resolution"] = f"{match.group(1)}x{match.group(2)}"
+            #file size
+            match = re.search(pattern["file_size"], line)
+            if match:
+                size, unit = match.groups()
+                data["file_size"] = float(size) * (1024 if unit == "MB" else 1)
+            #date time
+            match = re.search(pattern["date_time"], line)
+            if match:
+                data["date_time"] = match.group(1)
+                try:
+                    # Convert to datetime object
+                    dt = datetime.strptime(data["date_time"], "%Y-%m-%d %H:%M:%S")
+                    data["date_time"] = dt.strftime("%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    data["date_time"] = "Invalid date format"
+            #memory used
+            match = re.search(pattern["memory_used"], line)
+            if match:
+                size, unit = match.groups()
+                data["memory_used"] = float(size) * (1024 if unit == "MB" else 1)
+            #aov count
+            match = re.search(pattern["aov_count"], line)
+            if match:
+                data["aov_count"] = int(match.group(1))
+            #cpu gpu
+            match = re.search(pattern["cpu_gpu"], line)
+            if match:
+                data["cpu_gpu"] = match.group(1)
+            #output file
+            match = re.search(pattern["output_file"], line)
+            if match:
+                data["output_file"] = match.group(1)
+            
+        return data
+            
+
+
 
     def get_system_specs(self) -> Dict[str, str]:
         """Extract system specifications."""
