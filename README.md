@@ -115,10 +115,21 @@ Drop a text file of an Arnold log into the app or copy/paste an Arnold log into 
 <!-- ROADMAP -->
 ## Roadmap
 
-- [ ] Complete UI
-- [ ] Complete log parser
-- [ ] Connect parsed information to UI
-- [ ] Call it a feature release
+Needed to have a working v1
+- [x] finish framing all the functions to match the UI
+- [x] finish definign all the functions to parse the log properly
+- [ ] change camera in Render Info section
+- [ ] change CPU/GPU in Render Info section
+- [ ] hook up all functions to existing UI elements
+- [ ] remove emojis in the headers as each part is done
+- [ ] name entry point to name of app for side bar
+- [ ] link the sidebar headings to the app
+- [ ] make the warnings and errors display nicely
+
+Nice to have once it's working
+- [ ] format dahsboard with nicer colours
+- [ ] add some more useful charts
+- [ ] add a feature to export as an image
 
 See the [open issues](https://github.com/carlocarfora/arnold-log-viewer/issues) for a full list of proposed features (and known issues).
 

@@ -162,22 +162,35 @@ def main():
     parser = ArnoldLogParser(log_content)
 
     # Errors and Warnings
-    st.header("🚨 Errors / Warnings", divider=True)
+    st.header("Errors / Warnings", divider=True)
+    errors = parser.get_errors()
+    warnings = parser.get_warnings()
 
-    # Placeholder for errors and warnings
-    # errors_warnings = parser.get_errors_and_warnings()
-    errors_warnings = []
-    if errors_warnings:
-        for item in errors_warnings:
-            st.write(f"- {item}")
+    st.subheader("Errors")
+    if len(errors) > 0:
+        with st.expander("View Errors"):
+            errors_styled = []
+            for error in errors:
+                errors_styled.append(f"`{error}`")
+            st.table(errors_styled)
     else:
-        st.write("No errors or warnings found.")
+        st.success("No errors found.")
+
+    st.subheader("Warnings")
+    if len(warnings) > 0:
+        with st.expander("View Warnings"):
+            warnings_styled = []
+            for warning in warnings:
+                warnings_styled.append(f"`{warning}`")
+            st.table(warnings_styled)
+    else:
+        st.success("No warnings found.")
 
     # Render Stats
-    st.header("📊 Render Info", divider=True)
+    st.header("Render Info", divider=True)
     render_stats = parser.get_render_info()
 
-    st.write(render_stats)
+    # st.write(render_stats)
     
     # Row 1 for information
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -195,7 +208,7 @@ def main():
         st.write(render_stats["resolution"])
 
     with col4:
-        st.subheader("File Size")
+        st.subheader("File Size (.ass)")
         st.write(render_stats["file_size"])
 
     with col5:
@@ -207,57 +220,51 @@ def main():
 
     with col1:
         st.subheader("Total Render Time")
-        st.write("00:00:01:30")
+        st.write(render_stats["render_time"])
 
     with col2:
         st.subheader("Memory Used")
-        st.write("2GB")
+        st.write(render_stats["memory_used"])
 
     with col3:
         st.subheader("AOV Count")
-        st.write("30")
+        st.write(render_stats["aov_count"])
 
     with col4:
         st.subheader("CPU/GPU")
-        st.write("CPU")
+        st.write(render_stats["cpu_gpu"])
 
     with col5:
         st.subheader("Output File")
-        st.write("/path/to/output/file.exr")
+        st.write(render_stats["output_file"])
 
     # Arnold worker information tab
     st.header("💻 Worker Info", divider=True)
-    specs = parser.get_system_specs()
-    arnold_info = parser.get_arnold_info()
+    worker_info = parser.get_worker_info()
 
     # Create columns for system specs
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
         st.subheader("CPU")
-        st.write(specs.get("cpu", "Not found"))
+        st.write(worker_info["cpu"])
 
     with col2:
         st.subheader("Core Count")
-        st.write(specs.get("core_count", "Not found"))
+        st.write(worker_info["core_count"])
 
     with col3:
         st.subheader("Worker RAM")
-        st.write(specs.get("ram", "Not found"))
+        st.write(worker_info["worker_ram"])
 
     with col4:
         st.subheader("Host Application")
-        if "host_app" in arnold_info and "host_version" in arnold_info:
-            st.write(f"{arnold_info['host_app']} {arnold_info['host_version']}")
-        else:
-            st.write("Not found")
+        st.write(worker_info["host_application"])
 
     with col5:
         st.subheader("Arnold Version")
-        if "arnold_version" in arnold_info:
-            st.write(f"Version {arnold_info['arnold_version']}")
-        else:
-            st.write("Not found")
+        st.write(worker_info["arnold_version"])
+
 
     # Arnold and Host Application Tab
     st.header("🎮 Arnold Config / Plugins", divider=True)
