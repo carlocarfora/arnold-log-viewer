@@ -1,3 +1,4 @@
+from email import message
 import re
 import streamlit as st
 from typing import Dict, List, Tuple
@@ -16,7 +17,8 @@ class ArnoldLogParser:
 
         for line in self.lines:
             if "WARNING |" in line:
-                data.append(line)
+                message = line.split("|")
+                data.append(message)
         return data
 
     def get_errors(self) -> List[str]:
@@ -52,7 +54,7 @@ class ArnoldLogParser:
             "date_time": r"log started (.+ \d{4})",
             "render_time": r"render done in (\d+:\d+\.\d+)",
             "memory_used": r"peak CPU memory used\s+([\d\.]+MB)",
-            "aov_count": r"\[aov\] parsing (\d+) output statements",
+            "aov_count": r"preparing\s+(\d+)\s+AOV.*\((\d+)\s+deep\s+AOVs\)",
             "cpu_gpu": r"using\s+(CPU|GPU)",
             "output_file": r"writing file `([^`]+)'",
         }
@@ -91,7 +93,9 @@ class ArnoldLogParser:
             # aov count
             match = re.search(pattern["aov_count"], line)
             if match:
-                data["aov_count"] = match.group(1)
+                data["aov_count"] = (
+                    match.group(1) + " (" + match.group(2) + " deep)"
+                )
             # cpu gpu
             match = re.search(pattern["cpu_gpu"], line)
             if match:
@@ -115,11 +119,11 @@ class ArnoldLogParser:
 
         # Regex patterns for extracting information
         pattern = {
-            "cpu": "not found",
-            "core_count": "",
-            "worker_ram": "",
+            "cpu": r"\|\s*\d+\s+x\s+(.*?)\s+\(",
+            "core_count": r"\(([^()]+cores[^()]+)\)",
+            "worker_ram": r"with\s+(\d+MB)",
             "host_application": r"host application:\s*(.*?)(?:\s+Maya\s+([\d.]+))?$",
-            "arnold_version": r"Arnold\s+([\d.]+)",
+            "arnold_version": r"(Arnold\s+\d+\.\d+\.\d+\.\d+)",
         }
 
         # Combined pattern for CPU info with cores and RAM
@@ -127,142 +131,205 @@ class ArnoldLogParser:
 
         for line in self.lines:
             # CPU count
-            match = re.search(pattern["cpu"], line)
-            if match:
-                data["cpu"] = ""
+            if "cores" in line and "logical" in line:
+                match = re.search(pattern["cpu"], line)
+                if match:
+                    data["cpu"] = match.group(1)
 
             # Core count
-            match = re.search(pattern["core_count"], line)
-            if match:
-                data["core_count"] = ""
+            if "cores" in line and "logical" in line:
+                match = re.search(pattern["core_count"], line)
+                if match:
+                    data["core_count"] = match.group(1)
 
             # Worker ram
-            match = re.search(pattern["worker_ram"], line)
-            if match:
-                data["worker_ram"] = ""
+            if "cores" in line and "logical" in line:
+                match = re.search(pattern["worker_ram"], line)
+                if match:
+                    data["worker_ram"] = match.group(1)
 
             # Host application
             match = re.search(pattern["host_application"], line)
             if match:
-                data["host_application"] = ""
+                data["host_application"] = match.group(1)
 
             # Arnold version
             match = re.search(pattern["arnold_version"], line)
             if match:
-                data["arnold_version"] = ""
+                data["arnold_version"] = match.group(1)
 
         return data
 
     def get_plugin_info(self) -> Dict[str, any]:
         """Get plugin loading information."""
-        plugins = {"load_path": "", "count": 0, "loaded": []}
+
+        data = {}
+        collecting = False
+        current_path = None
+        current_lines = []
 
         for line in self.lines:
-            if "loading plugins from" in line.lower():
-                path_match = re.search(r"\[(.*?)\]", line)
-                if path_match:
-                    plugins["load_path"] = path_match.group(1)
-            elif "successfully loaded plugin" in line.lower():
-                plugin_match = re.search(
-                    r'successfully loaded plugin "([^"]+)"', line, re.IGNORECASE
-                )
-                if plugin_match:
-                    plugins["loaded"].append(plugin_match.group(1))
-                    plugins["count"] += 1
+            if "[ass]" in line:
+                # Stop scanning when [ass] is found
+                break
 
-        return plugins
+            if "loading plugins from" in line:
+                # Save previous block
+                if current_path and current_lines:
+                    data[current_path] = current_lines
 
-    def get_scene_contents(self) -> Dict[str, any]:
+                # Start new block
+                current_lines = []
+                collecting = True
+                if "|" in line:
+                    current_path = line.split("|", 1)[1].strip()
+
+            elif collecting and "uses Arnold" in line:
+                if "|" in line:
+                    current_lines.append(line.split("|", 1)[1].strip())
+
+            elif collecting and "loaded" in line and "plugins" in line:
+                if "|" in line:
+                    current_lines.append(line.split("|", 1)[1].strip())
+                # Store and reset
+                if current_path:
+                    data[current_path] = current_lines
+                collecting = False
+                current_path = None
+                current_lines = []
+
+        return data
+
+    def get_colour_space(self) -> Dict[str, str]:
+        """Get colour space information."""
+        data = {
+            "colour_space": "Can't parse details from log.",
+            "ocio_config": "Can't parse details from log.",
+        }
+
+        # Regex patterns for extracting information
+        pattern = {
+            "colour_space": r'rendering color space is\s+"([^"]+)"',
+            "ocio_config": r'from the OCIO environment variable (\S+)',
+
+        }
+
+        # Iterate through each line and apply regex patterns
+        for line in self.lines:
+            # colour space
+            match = re.search(pattern["colour_space"], line)
+            if match:
+                data["colour_space"] = match.group(1)
+
+            # ocio config
+            match = re.search(pattern["ocio_config"], line)
+            if match:
+                data["ocio_config"] = match.group(1)
+
+        return data
+
+    def get_scene_info(self) -> Dict[str, any]:
         """Get scene contents and initialization information."""
-        contents = {
-            "node_count": 0,
-            "init_time": 0,
-            "camera": "",
-            "resolution": "",
-            "aa_samples": "",
-            "diffuse_depth": 0,
-            "specular_depth": 0,
-            "transmission_depth": 0,
-            "volume_indirect_depth": 0,
-            "total_depth": 0,
+        data = {
+            "no_of_lights": "",
+            "no_of_objects": "",
+            "no_of_alembics": "",
+            "node_init_time": ""
         }
 
-        for line in self.lines:
-            if "initializing" in line.lower() and "nodes" in line.lower():
-                match = re.search(r"initializing\s+(\d+)\s+nodes", line, re.IGNORECASE)
-                if match:
-                    contents["node_count"] = int(match.group(1))
-            if "nodes initialized in" in line.lower():
-                match = re.search(r"in\s+([\d.]+)\s+seconds", line, re.IGNORECASE)
-                if match:
-                    contents["init_time"] = float(match.group(1))
-            if "camera" in line:
-                match = re.search(r'camera\s+"([^"]+)"', line)
-                if match:
-                    contents["camera"] = match.group(1)
-            if "rendering image at" in line.lower():
-                match = re.search(
-                    r"rendering image at (\d+)\s*x\s*(\d+)", line, re.IGNORECASE
-                )
-                if match:
-                    width, height = match.group(1), match.group(2)
-                    contents["resolution"] = f"{width}x{height}"
-            if "AA samples" in line:
-                match = re.search(r"at \d+ x \d+, (\d+) AA samples", line)
-                if match:
-                    contents["aa_samples"] = int(match.group(1))
-            if "GI diffuse depth" in line:
-                match = re.search(r"GI diffuse depth\s+(\d+)", line)
-                if match:
-                    contents["diffuse_depth"] = int(match.group(1))
-            if "GI specular depth" in line:
-                match = re.search(r"GI specular depth\s+(\d+)", line)
-                if match:
-                    contents["specular_depth"] = int(match.group(1))
-            if "GI transmission depth" in line:
-                match = re.search(r"GI transmission depth\s+(\d+)", line)
-                if match:
-                    contents["transmission_depth"] = int(match.group(1))
-            if "volume indirect samples" in line:
-                match = re.search(r"volume indirect samples\s+(\d+)", line)
-                if match:
-                    contents["volume_indirect_depth"] = int(match.group(1))
-            if "total GI depth" in line:
-                match = re.search(r"total GI depth\s+(\d+)", line)
-                if match:
-                    contents["total_depth"] = int(match.group(1))
+        # Regex patterns for extracting information
+        pattern = {
+            "no_of_lights": r'there are (\d+) light[s]?',
+            "no_of_objects": r'and (\d+) objects',
+            "no_of_alembics": r'\|\s+(\d+)\s+alembic',
+            "node_init_time": r'node init\s+([\d:.]+)'
 
-        return contents
-
-    def get_samples_rays(self) -> Dict[str, any]:
-        """Get detailed render statistics."""
-        stats = {
-            "total_time": 0,
-            "max_rays_pixel": 0,
-            "avg_rays_pixel": 0,
-            "total_rays": "",
-            "rays_per_second": "",
         }
 
+        # Iterate through each line and apply regex patterns
         for line in self.lines:
-            if "render done in" in line.lower():
-                match = re.search(r"in\s+([\d.]+)\s+seconds", line)
-                if match:
-                    stats["total_time"] = float(match.group(1))
-            if "rays/pixel" in line:
-                match = re.search(r"([\d.]+)\s+rays/pixel", line)
-                if match:
-                    stats["max_rays_pixel"] = float(match.group(1))
-            if "rays/sec" in line:
-                match = re.search(r"([\d.]+[KMG]?)\s+rays/sec", line)
-                if match:
-                    stats["rays_per_second"] = match.group(1)
-            if "total rays" in line.lower():
-                match = re.search(r"([\d.]+[KMG]?)\s+rays", line)
-                if match:
-                    stats["total_rays"] = match.group(1)
+            # Number of lights
+            match = re.search(pattern["no_of_lights"], line)
+            if match:
+                data["no_of_lights"] = match.group(1)
+            # Number of objects
+            match = re.search(pattern["no_of_objects"], line)
+            if match:
+                data["no_of_objects"] = match.group(1)
+            # Total Nodes Initialised
+            match = re.search(pattern["no_of_alembics"], line)
+            if match:
+                data["no_of_alembics"] = match.group(1)
+            # Node initialization time
+            match = re.search(pattern["node_init_time"], line)
+            if match:
+                data["node_init_time"] = match.group(1)
 
-        return stats
+        return data
+
+    def get_sample_info(self) -> Dict[str, any]:
+        """Get samples and ray statistics."""
+        data = {
+            "aa": "",
+            "diffuse": "",
+            "specular": "",
+            "transmission": "",
+            "volume": "",
+            "total": "",
+            "bssrdf": "",
+            "transparency": ""
+        }
+
+        # Regex patterns for extracting information
+        pattern = {
+            "aa": r",\s*(\d+)\s+AA samples",
+            "aa_max": r"AA samples max\s+(\d+)",
+            "diffuse": r"diffuse\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
+            "specular": r"specular\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
+            "transmission": r"transmission\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
+            "volume": r"volume indirect\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
+            "total": r"total\s+depth\s+(\d+)",
+            "bssrdf": r"bssrdf\s+<([^>]+)>",
+            "light": r"light\s+<([^>]+)>",
+            "transparency": r"transparency\s+depth\s+(\d+)"
+        }
+
+        # Iterate through each line and apply regex patterns
+        for line in self.lines:
+            # Number of lights
+            match = re.search(pattern["aa"], line)
+            if match:
+                data["aa"] = match.group(1)
+            # Number of objects
+            match = re.search(pattern["diffuse"], line)
+            if match:
+                data["diffuse"] = match.group(1)
+            # Total Nodes Initialised
+            match = re.search(pattern["specular"], line)
+            if match:
+                data["specular"] = match.group(1)
+            # Node initialization time
+            match = re.search(pattern["transmission"], line)
+            if match:
+                data["transmission"] = match.group(1)
+            # Number of lights
+            match = re.search(pattern["volume"], line)
+            if match:
+                data["volume"] = match.group(1)
+            # Number of objects
+            match = re.search(pattern["total"], line)
+            if match:
+                data["total"] = match.group(1)
+            # Total Nodes Initialised
+            match = re.search(pattern["bssrdf"], line)
+            if match:
+                data["bssrdf"] = match.group(1)
+            # Node initialization time
+            match = re.search(pattern["transparency"], line)
+            if match:
+                data["transparency"] = match.group(1)
+
+        return data
 
     def get_render_progress(self) -> Dict[str, any]:    
         """

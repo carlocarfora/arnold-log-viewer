@@ -117,17 +117,17 @@ Drop a text file of an Arnold log into the app or copy/paste an Arnold log into 
 
 Needed to have a working v1
 - [x] finish framing all the functions to match the UI
-- [x] finish definign all the functions to parse the log properly
+- [x] finish defining all the functions to parse the log properly
 - [ ] change camera in Render Info section
 - [ ] change CPU/GPU in Render Info section
 - [ ] hook up all functions to existing UI elements
-- [ ] remove emojis in the headers as each part is done
-- [ ] name entry point to name of app for side bar
-- [ ] link the sidebar headings to the app
-- [ ] make the warnings and errors display nicely
+- [x] remove emojis in the headers
+- [x] name entry point to name of app for side bar
+- [x] link the sidebar headings to the app
+- [x] make the warnings and errors display nicely
 
 Nice to have once it's working
-- [ ] format dahsboard with nicer colours
+- [ ] format dashboard with nicer colours
 - [ ] add some more useful charts
 - [ ] add a feature to export as an image
 

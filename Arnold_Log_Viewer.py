@@ -148,9 +148,6 @@ def main():
         if uploaded_file is not None:
             log_content = uploaded_file.getvalue().decode()
 
-    # st.write(log_content)
-    # st.write(type(log_content))
-
     # Load default log file
     with open("example_log.log", "r") as f:
         default_log_content = f.read()
@@ -163,7 +160,9 @@ def main():
 
     parser = ArnoldLogParser(log_content)
 
+    ########################################
     # Errors and Warnings
+    ########################################
     st.header("Errors / Warnings", divider=True)
     errors = parser.get_errors()
     warnings = parser.get_warnings()
@@ -173,8 +172,9 @@ def main():
         with st.expander("View Errors"):
             errors_styled = []
             for error in errors:
-                errors_styled.append(f"`{error}`")
-            st.table(errors_styled)
+                # errors_styled.append(f"`{error}`")
+                st.code(errors, language="log", line_numbers=False, wrap_lines=True)
+            # st.table(errors_styled)
     else:
         st.success("No errors found.")
 
@@ -183,17 +183,20 @@ def main():
         with st.expander("View Warnings"):
             warnings_styled = []
             for warning in warnings:
-                warnings_styled.append(f"`{warning}`")
-            st.table(warnings_styled)
+                # warnings_styled.append(f"`{warning}`")
+                st.code(warning, language="log", line_numbers=False, wrap_lines=True)
+            # st.table(warnings_styled)
     else:
         st.success("No warnings found.")
 
+    ########################################
     # Render Stats
+    ########################################
     st.header("Render Info", divider=True)
     render_stats = parser.get_render_info()
 
     # st.write(render_stats)
-    
+
     # Row 1 for information
     col1, col2, col3, col4, col5 = st.columns(5)
 
@@ -240,7 +243,9 @@ def main():
         st.subheader("Output File")
         st.write(render_stats["output_file"])
 
+    ########################################
     # Arnold worker information tab
+    ########################################
     st.header("Worker Info", divider=True)
     worker_info = parser.get_worker_info()
 
@@ -267,50 +272,57 @@ def main():
         st.subheader("Arnold Version")
         st.write(worker_info["arnold_version"])
 
-
-    # Arnold and Host Application Tab
+    ########################################
+    # Arnold Config / Plugins
+    ########################################
     st.header("Arnold Config / Plugins", divider=True)
+    plugin_info = parser.get_plugin_info()
 
     # Plugin information
     st.subheader("Plugin Information")
-    plugin_info = parser.get_plugin_info()
-    if plugin_info["load_path"]:
-        st.text(f"Plugin Path: {plugin_info['load_path']}")
+    st.write(plugin_info)
 
-    st.metric("Plugins Loaded", plugin_info["count"])
+    # Colour information
+    colour_info = parser.get_colour_space()
 
-    with st.expander("View Loaded Plugins"):
-        for plugin in plugin_info["loaded"]:
-            st.write(f"• {plugin}")
+    # Create columns for colour management
+    col1, col2 = st.columns(2)
 
+    with col1:
+        st.subheader("Colour Space")
+        st.write(colour_info["colour_space"])
+
+    with col2:
+        st.subheader("OCIO Config")
+        st.write(colour_info["ocio_config"])
+
+    ########################################
     # Scene Statistics
+    ########################################
     st.header("Scene Statistics", divider=True)
-
-    scene_contents = parser.get_scene_contents()
+    scene_info = parser.get_scene_info()
+    sample_info = parser.get_sample_info()
 
     # Node Init / Scene Contents
     st.subheader("Node Init / Scene Contents")
     cols = st.columns(4)
-    cols[0].metric("Number of Lights", scene_contents["aa_samples"])
-    cols[1].metric("Number of Objects", scene_contents["aa_samples"])
-    cols[2].metric("Specular", scene_contents["aa_samples"])
-    cols[3].metric("Transmission", scene_contents["aa_samples"])
-    cols = st.columns(2)
-    cols[0].metric("Total Nodes", scene_contents["node_count"])
-    cols[1].metric("Node Init Time", f"{scene_contents['init_time']:.2f}s")
+    cols[0].metric("Number of Lights", scene_info["no_of_lights"])
+    cols[1].metric("Number of Objects", scene_info["no_of_objects"])
+    cols[2].metric("Number of Alembics", scene_info["no_of_alembics"])
+    cols[3].metric("Node Init Time", scene_info["node_init_time"])
 
     # Samples / Ray Depths
     st.subheader("Samples / Ray Depths")
     cols = st.columns(4)
-    cols[0].metric("AA Samples", scene_contents["aa_samples"])
-    cols[1].metric("Diffuse", scene_contents["aa_samples"])
-    cols[2].metric("Specular", scene_contents["aa_samples"])
-    cols[3].metric("Transmission", scene_contents["aa_samples"])
+    cols[0].metric("AA Samples", sample_info["aa"])
+    cols[1].metric("Diffuse", sample_info["diffuse"])
+    cols[2].metric("Specular", sample_info["specular"])
+    cols[3].metric("Transmission", sample_info["transmission"])
     cols = st.columns(4)
-    cols[0].metric("Volume", scene_contents["aa_samples"])
-    cols[1].metric("Total", scene_contents["aa_samples"])
-    cols[2].metric("BSSRDF", scene_contents["aa_samples"])
-    cols[3].metric("Transparency", scene_contents["aa_samples"])
+    cols[0].metric("Volume", sample_info["volume"])
+    cols[1].metric("Total", sample_info["total"])
+    cols[2].metric("BSSRDF", sample_info["bssrdf"])
+    cols[3].metric("Transparency", sample_info["transparency"])
 
     # Render Progress
     st.subheader("Render Progress")
