@@ -57,6 +57,8 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+![Arnold Log Viewer](images/screenshot.png)
+
 Arnold Log Viewer is a lightweight and user-friendly application designed to help developers and artists analyze Arnold renderer logs efficiently. It provides a clean interface to parse, filter, and visualize log data, making debugging and performance optimization easier.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -115,7 +117,7 @@ Drop a text file of an Arnold log into the app or copy/paste an Arnold log into 
 <!-- ROADMAP -->
 ## Roadmap
 
-Needed to have a working v1
+Needed for a working v1:
 - [x] finish framing all the functions to match the UI
 - [x] finish defining all the functions to parse the log properly
 - [ ] change camera in Render Info section
@@ -126,7 +128,7 @@ Needed to have a working v1
 - [x] link the sidebar headings to the app
 - [x] make the warnings and errors display nicely
 
-Nice to have once it's working
+Nice to have once it's working:
 - [ ] format dashboard with nicer colours
 - [ ] add some more useful charts
 - [ ] add a feature to export as an image
@@ -170,8 +172,7 @@ Distributed under the project_license. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-[@carlo_carfora](https://twitter.com/carlo_carfora)
-
+[@carlo_carfora](https://twitter.com/carlo_carfora)  
 [https://github.com/carlocarfora/arnold-log-viewer](https://github.com/carlocarfora/arnold-log-viewer)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
