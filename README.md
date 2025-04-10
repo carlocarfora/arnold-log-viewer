@@ -95,7 +95,7 @@ To get a local copy up and running follow these simple steps.
     ```
 4. Run the app with the following
     ```sh
-    streamlit run app.py
+    streamlit run Arnold_Render_Viewer.py
     ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
