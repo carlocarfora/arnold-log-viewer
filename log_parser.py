@@ -331,11 +331,26 @@ class ArnoldLogParser:
 
         return data
 
-    def get_render_progress(self) -> Dict[str, any]:    
-        """
-        docstring
-        """
-        pass
+    def get_progress_info(self) -> Dict[str, any]:    
+        """Get render progress information."""
+        data = {}
+
+        # Regex patterns for extracting information
+        pattern = {
+            "progress": r"(\d+)% done - (\d+) rays/pixel",
+        }
+        
+        progress_dict = {}
+        # pattern = re.compile(r"(\d+)% done - (\d+) rays/pixel")
+
+        for line in self.lines:
+            match = re.search(pattern["progress"], line)
+            if match:
+                percent = str(match.group(1)).zfill(3)
+                rays_per_pixel = int(match.group(2))
+                data[percent] = rays_per_pixel
+        
+        return data
 
     def get_scene_creation(self) -> Dict[str, any]:   
         """

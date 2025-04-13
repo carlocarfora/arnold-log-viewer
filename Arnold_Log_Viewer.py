@@ -302,6 +302,7 @@ def main():
     st.header("Scene Statistics", divider=True)
     scene_info = parser.get_scene_info()
     sample_info = parser.get_sample_info()
+    progress_info = parser.get_progress_info()
 
     # Node Init / Scene Contents
     st.subheader("Node Init / Scene Contents")
@@ -326,31 +327,8 @@ def main():
 
     # Render Progress
     st.subheader("Render Progress")
-    progress_stats = {
-        "005%": 9,
-        "010%": 9,
-        "015%": 9,
-        "020%": 9,
-        "025%": 9,
-        "030%": 9,
-        "035%": 10,
-        "040%": 10,
-        "045%": 12,
-        "050%": 12,
-        "055%": 13,
-        "060%": 130,
-        "065%": 13,
-        "070%": 13,
-        "075%": 13,
-        "080%": 13,
-        "085%": 13,
-        "090%": 13,
-        "095%": 13,
-        "100%": 13,
-    }
-
     display_bar_chart(
-        progress_stats,
+        [progress_info],
         "Rays Per Pixel",
         "% of total ray count",
     )    
