@@ -2,7 +2,6 @@ from email import message
 import re
 import streamlit as st
 from typing import Dict, List, Tuple
-from datetime import datetime
 
 
 class ArnoldLogParser:

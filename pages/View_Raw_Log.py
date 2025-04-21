@@ -12,7 +12,7 @@ Version: 0.1.0
 # IMPORTS
 # =========================
 import streamlit as st
-from app import sidebar
+from Arnold_Log_Viewer import sidebar
 
 # GLOBALS / CONSTANTS
 # =========================
