@@ -120,9 +120,9 @@ Drop a text file of an Arnold log into the app or copy/paste an Arnold log into 
 Needed for a working v1:
 - [x] finish framing all the functions to match the UI
 - [x] finish defining all the functions to parse the log properly
-- [ ] change camera in Render Info section
-- [ ] change CPU/GPU in Render Info section
-- [ ] hook up all functions to existing UI elements
+- [x] change camera in Render Info section
+- [x] change CPU/GPU in Render Info section
+- [x] hook up all functions to existing UI elements
 - [x] remove emojis in the headers
 - [x] name entry point to name of app for side bar
 - [x] link the sidebar headings to the app

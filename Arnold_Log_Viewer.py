@@ -158,6 +158,7 @@ def main():
     # Session state variable to share log file
     st.session_state["shared_log"] = log_content
 
+    # Initialize the log parser
     parser = ArnoldLogParser(log_content)
 
     ########################################
@@ -169,23 +170,17 @@ def main():
 
     st.subheader("Errors")
     if len(errors) > 0:
-        with st.expander("View Errors"):
-            errors_styled = []
+        with st.expander(f"View {len(errors)} Error/s"):
             for error in errors:
-                # errors_styled.append(f"`{error}`")
                 st.code(errors, language="log", line_numbers=False, wrap_lines=True)
-            # st.table(errors_styled)
     else:
         st.success("No errors found.")
 
     st.subheader("Warnings")
     if len(warnings) > 0:
-        with st.expander("View Warnings"):
-            warnings_styled = []
+        with st.expander(f"View {len(warnings)} Warning/s"):
             for warning in warnings:
-                # warnings_styled.append(f"`{warning}`")
                 st.code(warning, language="log", line_numbers=False, wrap_lines=True)
-            # st.table(warnings_styled)
     else:
         st.success("No warnings found.")
 
@@ -195,51 +190,31 @@ def main():
     st.header("Render Info", divider=True)
     render_stats = parser.get_render_info()
 
-    # st.write(render_stats)
-
-    # Row 1 for information
-    col1, col2, col3, col4, col5 = st.columns(5)
-
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.subheader("Frame Number")
         st.write(render_stats["frame_number"])
-
     with col2:
-        st.subheader("Camera")
-        st.write(render_stats["camera"])
-
-    with col3:
         st.subheader("Resolution")
         st.write(render_stats["resolution"])
-
-    with col4:
+    with col3:
         st.subheader("File Size (.ass)")
         st.write(render_stats["file_size"])
-
-    with col5:
+    with col4:
         st.subheader("Date / Time")
         st.write(render_stats["date_time"])
 
-    # Row 2 for information
-    col1, col2, col3, col4, col5 = st.columns(5)
-
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.subheader("Total Render Time")
         st.write(render_stats["render_time"])
-
     with col2:
         st.subheader("Memory Used")
         st.write(render_stats["memory_used"])
-
     with col3:
         st.subheader("AOV Count")
         st.write(render_stats["aov_count"])
-
     with col4:
-        st.subheader("CPU/GPU")
-        st.write(render_stats["cpu_gpu"])
-
-    with col5:
         st.subheader("Output File")
         st.write(render_stats["output_file"])
 
@@ -249,25 +224,19 @@ def main():
     st.header("Worker Info", divider=True)
     worker_info = parser.get_worker_info()
 
-    # Create columns for system specs
     col1, col2, col3, col4, col5 = st.columns(5)
-
     with col1:
         st.subheader("CPU")
         st.write(worker_info["cpu"])
-
     with col2:
         st.subheader("Core Count")
         st.write(worker_info["core_count"])
-
     with col3:
         st.subheader("Worker RAM")
         st.write(worker_info["worker_ram"])
-
     with col4:
         st.subheader("Host Application")
         st.write(worker_info["host_application"])
-
     with col5:
         st.subheader("Arnold Version")
         st.write(worker_info["arnold_version"])
@@ -277,21 +246,17 @@ def main():
     ########################################
     st.header("Arnold Config / Plugins", divider=True)
     plugin_info = parser.get_plugin_info()
+    colour_info = parser.get_colour_space()
 
     # Plugin information
     st.subheader("Plugin Information")
-    st.write(plugin_info)
+    st.json(plugin_info, expanded=False)
 
     # Colour information
-    colour_info = parser.get_colour_space()
-
-    # Create columns for colour management
     col1, col2 = st.columns(2)
-
     with col1:
         st.subheader("Colour Space")
         st.write(colour_info["colour_space"])
-
     with col2:
         st.subheader("OCIO Config")
         st.write(colour_info["ocio_config"])
@@ -300,9 +265,17 @@ def main():
     # Scene Statistics
     ########################################
     st.header("Scene Statistics", divider=True)
+    # Parse log content
     scene_info = parser.get_scene_info()
     sample_info = parser.get_sample_info()
     progress_info = parser.get_progress_info()
+    scene_creation = parser.get_scene_creation()
+    render_time_stats = parser.get_render_time()
+    memory_stats = parser.get_memory_stats()
+    ray_stats = parser.get_ray_stats()
+    shader_stats = parser.get_shader_stats()
+    geometry_stats = parser.get_geometry_stats()
+    texture_stats = parser.get_texture_stats()
 
     # Node Init / Scene Contents
     st.subheader("Node Init / Scene Contents")
@@ -331,33 +304,14 @@ def main():
         [progress_info],
         "Rays Per Pixel",
         "% of total ray count",
-    )    
+    )
 
     # Scene creation time
     st.subheader("Scene Creation")
-    scene_creation_stats = {
-        "plugin loading": 10,
-        "system/unaccounted": 15,
-        "total": 25
-    }
-
-    display_bar_chart(
-        scene_creation_stats,
-        "Time",
-        "Time as percentage"
-        )
+    display_bar_chart(scene_creation, "Time", "Time as percentage")
 
     # Render time
     st.subheader("Render Time")
-
-    render_time_stats = {
-        "Loading Assets": 10,
-        "Geometry Processing": 15,
-        "Shading": 25,
-        "Rendering": 40,
-        "Denoising": 20
-    }
-
     display_bar_chart(
         render_time_stats,
         "Render Time",
@@ -371,86 +325,42 @@ def main():
     cols[1].metric("Startup Memory used", "2290.95")
     cols[2].metric("Geometry Memory used","36.70")
     cols[3].metric("Texture Memory used", "242.10")
-    # cull low memory stats with a tickbox to show it
-    memory_stats = {
-        "peak CPU memory used  ": 3784.42,
-        "at startup            ": 2290.95,
-        "AOV samples           ": 1.24,
-        "output buffers        ": 3.27,
-        "framebuffers          ": 35.16,
-        "node overhead         ": 0.00,
-        "message passing       ": 0.13,
-        "memory pools          ": 130.52,
-        "geometry              ": 36.70,
-        "polymesh              ": 16.10,
-        "vertices              ": 8.74,
-        "vertex indices        ": 6.81,
-        "packed normals        ": 2.91,
-        "normal indices        ": 3.38,
-        "uv coords             ": 1.56,
-        "uv coords idxs        ": 5.79,
-        "P reference (autobump)": 4.45,
-        "N reference (autobump)": 1.48,
-        "uniform indices       ": 1.57,
-        "userdata              ": 0.00,
-        "subdivs               ": 20.59,
-        "accel structs         ": 21.59,
-        "skydome importance map": 15.60,
-        "strings               ": 24.50,
-        "texture cache         ": 242.10,
-        "profiler              ": 17.87,
-        "backtrace handler     ": 354.21,
-        "unaccounted           ": 610.61,
-    }
-
     display_bar_chart(
         memory_stats,
         "Memory Used",
         "Memory used in MB",
         _stack=False,
         _horizontal=True,
-        convert_values=False
+        convert_values=False,
     )
 
     # Ray Stats
     st.subheader("Rays")
-    ray_stats = {
-        "Camera": 2318256,
-        "Shadow": 228076,
-        "Diffuse": 1043914,
-        "Total": 3590246
-    }
-
-    display_bar_chart(ray_stats, "Rays", "Rays counts per pixel")
+    display_bar_chart(ray_stats, "Rays", "Total rays per category")
 
     # Shader Stats
     st.subheader("Shaders")
+    display_bar_chart(shader_stats, "Shaders", "Shader calls per category.")
 
     # Geometry statistics
     st.subheader("Geometry")
-    geo_stats = parser.get_geometry_stats()
-    cols = st.columns(2)
-
-    with cols[0]:
-        st.metric("Polymeshes", geo_stats["polymesh_count"])
-        st.metric("Total Polygons", geo_stats["total_polygons"])
-
-    with cols[1]:
-        st.metric("Curves", geo_stats["curve_count"])
-        st.metric("Subdivision Surfaces", geo_stats["subdivision_surfaces"])
+    cols = st.columns(4)
+    cols[0].metric("Polymesh Count", geometry_stats["polymesh_count"])
+    cols[1].metric("Procedural Count", geometry_stats["proc_count"])
+    cols[2].metric("Triangle Count", geometry_stats["triangle_count"])
+    cols[3].metric("Subdivision Surfaces", geometry_stats["subdivision_surfaces"])
 
     # Texture statistics
     st.subheader("Textures")
-    tex_stats = parser.get_texture_stats()
-    cols = st.columns(2)
-    cols[0].metric("Texture Count", tex_stats["texture_count"])
-    cols[1].metric("Total Size", tex_stats["total_size"])
+    cols = st.columns(6)
+    cols[0].metric("Peak Cache Memory", texture_stats["peak_cache_memory"])
+    cols[1].metric("Pixel Data Read", texture_stats["pixel_data_read"])
+    cols[2].metric("Unique Images", texture_stats["unique_images"])
+    cols[3].metric("Duplicate Images", texture_stats["duplicate_images"])
+    cols[4].metric("Constant Value Images", texture_stats["constant_value_images"])
+    cols[5].metric("Broken/Invalid Images", texture_stats["broken_invalid_images"])
 
-    if tex_stats["missing_textures"]:
-        with st.expander("⚠️ Missing Textures"):
-            for tex in tex_stats["missing_textures"]:
-                st.warning(f"Missing: {tex}")
-
+    # Display Sidebar
     sidebar()
 
 
