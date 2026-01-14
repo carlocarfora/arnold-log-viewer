@@ -172,7 +172,7 @@ def main():
     if len(errors) > 0:
         with st.expander(f"View {len(errors)} Error/s"):
             for error in errors:
-                st.code(errors, language="log", line_numbers=False, wrap_lines=True)
+                st.code(error, language="log", line_numbers=False, wrap_lines=True)
     else:
         st.success("No errors found.")
 
