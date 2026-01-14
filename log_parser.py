@@ -31,21 +31,24 @@ class ArnoldLogParser:
         Args:
             t (str): Time string in format HH:MM:SS.ss or MM:SS.ss
         Returns:
-            float: Time in seconds
+            float: Time in seconds, or 0.0 if conversion fails
         """
-        parts = t.split(":")
-        parts = [float(p) for p in parts]
+        try:
+            parts = t.split(":")
+            parts = [float(p) for p in parts]
 
-        if len(parts) == 2:
-            # MM:SS.ss
-            minutes, seconds = parts
-            return minutes * 60 + seconds
-        elif len(parts) == 3:
-            # HH:MM:SS.ss
-            hours, minutes, seconds = parts
-            return hours * 3600 + minutes * 60 + seconds
-        else:
-            raise ValueError(f"Unexpected time format: {t}")
+            if len(parts) == 2:
+                # MM:SS.ss
+                minutes, seconds = parts
+                return minutes * 60 + seconds
+            elif len(parts) == 3:
+                # HH:MM:SS.ss
+                hours, minutes, seconds = parts
+                return hours * 3600 + minutes * 60 + seconds
+            else:
+                return 0.0
+        except (ValueError, AttributeError):
+            return 0.0
 
     def get_render_info(self) -> Dict[str, str]:
         """Get render information."""

@@ -146,20 +146,38 @@ def main():
         # File upload
         uploaded_file = st.file_uploader("Upload render log file", type=["txt", "log"])
         if uploaded_file is not None:
-            log_content = uploaded_file.getvalue().decode()
+            try:
+                log_content = uploaded_file.getvalue().decode("utf-8")
+            except UnicodeDecodeError:
+                st.error("Failed to decode file. Please ensure the file is a valid text file with UTF-8 encoding.")
+                log_content = None
 
     # Load default log file
-    with open("example_log.log", "r") as f:
-        default_log_content = f.read()
+    default_log_content = None
+    try:
+        with open("example_log.log", "r", encoding="utf-8") as f:
+            default_log_content = f.read()
+    except FileNotFoundError:
+        st.warning("Example log file not found. Please upload a log file to proceed.")
+    except Exception as e:
+        st.warning(f"Could not load example log file: {e}")
 
     if not log_content:
-        log_content = default_log_content
+        if default_log_content:
+            log_content = default_log_content
+        else:
+            st.info("Please upload a log file or paste log content to begin analysis.")
+            st.stop()
 
     # Session state variable to share log file
     st.session_state["shared_log"] = log_content
 
     # Initialize the log parser
-    parser = ArnoldLogParser(log_content)
+    try:
+        parser = ArnoldLogParser(log_content)
+    except Exception as e:
+        st.error(f"Failed to initialize log parser: {e}")
+        st.stop()
 
     ########################################
     # Errors and Warnings
