@@ -3,6 +3,126 @@ from typing import Dict, List, Tuple
 
 
 class ArnoldLogParser:
+    # Compiled regex patterns for better performance
+    # These are compiled once when the class is loaded
+    PATTERNS = {
+        # Render info patterns
+        "frame_number": re.compile(r"rendering frame\(s\): (\d+)"),
+        "camera": re.compile(r"camera\s+\"([^\"]+)\""),
+        "resolution": re.compile(r"rendering\s+image\s+at\s+(\d+)\s+x\s+(\d+)"),
+        "file_size": re.compile(r"read (\d+) bytes"),
+        "date_time": re.compile(r"log started (.+ \d{4})"),
+        "render_time": re.compile(r"render done in (\d+:\d+\.\d+)"),
+        "memory_used": re.compile(r"peak CPU memory used\s+([\d\.]+MB)"),
+        "aov_count": re.compile(r"preparing\s+(\d+)\s+AOV.*\((\d+)\s+deep\s+AOVs\)"),
+        "cpu_gpu": re.compile(r"using\s+(CPU|GPU)"),
+        "output_file": re.compile(r"writing file `([^`]+)'"),
+
+        # Worker info patterns
+        "cpu": re.compile(r"\|\s*\d+\s+x\s+(.*?)\s+\("),
+        "core_count": re.compile(r"\(([^()]+cores[^()]+)\)"),
+        "worker_ram": re.compile(r"with\s+(\d+MB)"),
+        "host_application": re.compile(r"host application:\s*(.*?)(?:\s+Maya\s+([\d.]+))?$"),
+        "arnold_version": re.compile(r"(Arnold\s+\d+\.\d+\.\d+\.\d+)"),
+
+        # Color space patterns
+        "colour_space": re.compile(r'rendering color space is\s+"([^"]+)"'),
+        "ocio_config": re.compile(r'from the OCIO environment variable (\S+)'),
+
+        # Scene info patterns
+        "no_of_lights": re.compile(r'there are (\d+) light[s]?'),
+        "no_of_objects": re.compile(r'and (\d+) objects'),
+        "no_of_alembics": re.compile(r'\|\s+(\d+)\s+alembic'),
+        "node_init_time": re.compile(r'node init\s+([\d:.]+)'),
+
+        # Sample info patterns
+        "aa": re.compile(r",\s*(\d+)\s+AA samples"),
+        "diffuse": re.compile(r"diffuse\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)"),
+        "specular": re.compile(r"specular\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)"),
+        "transmission": re.compile(r"transmission\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)"),
+        "volume": re.compile(r"volume indirect\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)"),
+        "total": re.compile(r"total\s+depth\s+(\d+)"),
+        "bssrdf": re.compile(r"bssrdf\s+<([^>]+)>"),
+        "transparency": re.compile(r"transparency\s+depth\s+(\d+)"),
+
+        # Progress patterns
+        "progress": re.compile(r"(\d+)% done - (\d+) rays/pixel"),
+
+        # Scene creation patterns
+        "scene_creation": re.compile(r"scene creation time\s+(\d+:\d+\.\d+)"),
+        "ass_parsing": re.compile(r"ass parsing\s+(\d+:\d+\.\d+)"),
+
+        # Render time patterns
+        "frame_time": re.compile(r"frame time\s+(\d+:\d+\.\d+)"),
+        "license_checkout_time": re.compile(r"license checkout time\s+(\d+:\d+\.\d+)"),
+        "node_init": re.compile(r"node init\s+(\d+:\d+\.\d+)"),
+        "sanity_checks": re.compile(r"sanity checks\s+(\d+:\d+\.\d+)"),
+        "driver_init_close": re.compile(r"driver init/close\s+(\d+:\d+\.\d+)"),
+        "rendering": re.compile(r"rendering\s+(\d+:\d+\.\d+)"),
+        "subdivision": re.compile(r"subdivision\s+(\d+:\d+\.\d+)"),
+        "threads_blocked": re.compile(r"threads blocked\s+(\d+:\d+\.\d+)"),
+        "mesh_processing": re.compile(r"mesh processing\s+(\d+:\d+\.\d+)"),
+        "displacement": re.compile(r"displacement\s+(\d+:\d+\.\d+)"),
+        "accel_building": re.compile(r"accel building\s+(\d+:\d+\.\d+)"),
+        "importance_maps": re.compile(r"importance maps\s+(\d+:\d+\.\d+)"),
+        "output_driver": re.compile(r"output driver\s+(\d+:\d+\.\d+)"),
+        "pixel_rendering": re.compile(r"pixel rendering\s+(\d+:\d+\.\d+)"),
+        "unaccounted": re.compile(r"unaccounted\s+(\d+:\d+\.\d+)"),
+
+        # Memory patterns
+        "peak_CPU_memory_used": re.compile(r"peak CPU memory used\s+([\d\.]+)MB"),
+        "at_startup": re.compile(r"at startup\s+([\d\.]+)MB"),
+        "AOV_samples": re.compile(r"AOV samples\s+([\d\.]+)MB"),
+        "output_buffers": re.compile(r"output buffers\s+([\d\.]+)MB"),
+        "framebuffers": re.compile(r"framebuffers\s+([\d\.]+)MB"),
+        "node_overhead": re.compile(r"node overhead\s+([\d\.]+)MB"),
+        "message_passing": re.compile(r"message passing\s+([\d\.]+)MB"),
+        "memory_pools": re.compile(r"memory pools\s+([\d\.]+)MB"),
+        "geometry": re.compile(r"geometry\s+([\d\.]+)MB"),
+        "polymesh": re.compile(r"polymesh\s+([\d\.]+)MB"),
+        "vertices": re.compile(r"vertices\s+([\d\.]+)MB"),
+        "vertex_indices": re.compile(r"vertex indices\s+([\d\.]+)MB"),
+        "packed_normals": re.compile(r"packed normals\s+([\d\.]+)MB"),
+        "normal_indices": re.compile(r"normal indices\s+([\d\.]+)MB"),
+        "uv_coords": re.compile(r"uv coords\s+([\d\.]+)MB"),
+        "uv_coords_idxs": re.compile(r"uv coords idxs\s+([\d\.]+)MB"),
+        "uniform_indices": re.compile(r"uniform indices\s+([\d\.]+)MB"),
+        "userdata": re.compile(r"userdata\s+([\d\.]+)MB"),
+        "subdivs": re.compile(r"subdivs\s+([\d\.]+)MB"),
+        "accel_structs": re.compile(r"accel structs\s+([\d\.]+)MB"),
+        "skydome_importance_map": re.compile(r"skydome importance map\s+([\d\.]+)MB"),
+        "strings": re.compile(r"strings\s+([\d\.]+)MB"),
+        "texture_cache": re.compile(r"texture cache\s+([\d\.]+)MB"),
+        "profiler": re.compile(r"profiler\s+([\d\.]+)MB"),
+        "backtrace_handler": re.compile(r"backtrace handler\s+([\d\.]+)MB"),
+
+        # Ray stats patterns
+        "camera_rays": re.compile(r"\|\s+camera\s+(\d+)"),
+        "shadow_rays": re.compile(r"\|\s+shadow\s+(\d+)"),
+        "specular_reflect": re.compile(r"\|\s+specular_reflect\s+(\d+)"),
+        "specular_transmit": re.compile(r"\|\s+specular_transmit\s+(\d+)"),
+
+        # Shader stats patterns
+        "primary": re.compile(r"\|\s+primary\s+(\d+)"),
+        "transparent_shadow": re.compile(r"\|\s+transparent_shadow\s+(\d+)"),
+        "background": re.compile(r"\|\s+background\s+(\d+)"),
+        "light_filter": re.compile(r"\|\s+light_filter\s+(\d+)"),
+        "importance": re.compile(r"\|\s+importance\s+(\d+)"),
+
+        # Geometry stats patterns
+        "polymesh_count": re.compile(r"\|\s+polymeshes\s+(\d+)"),
+        "proc_count": re.compile(r"\|\s+procs\s+(\d+)"),
+        "triangle_count": re.compile(r"\|\s+unique triangles\s+(\d+)"),
+        "subdivision_surfaces": re.compile(r"\|\s+subdivs\s+(\d+)"),
+
+        # Texture stats patterns
+        "peak_cache_memory": re.compile(r"\|\s+Peak cache memory\s*:\s*([\d.]+)\s*GB"),
+        "pixel_data_read": re.compile(r"\|\s+Pixel data read\s*:\s*([\d.]+)\s*GB"),
+        "unique_images": re.compile(r"\|\s+Images\s*:\s*(\d+)\s+unique"),
+        "duplicate_images": re.compile(r"\|\s+(\d+)\s+were exact duplicates of other images"),
+        "constant_value_images": re.compile(r"\|\s+(\d+)\s+were constant-valued"),
+        "broken_invalid_images": re.compile(r"\|\s+Broken or invalid files:\s+(\d+)"),
+    }
 
     def __init__(self, log_content: str):
         self.log_content = log_content
@@ -65,63 +185,49 @@ class ArnoldLogParser:
             "output_file": "Can't parse details from log.",
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "frame_number": r"rendering frame\(s\): (\d+)",
-            "camera": r"camera\s+\"([^\"]+)\"",
-            "resolution": r"rendering\s+image\s+at\s+(\d+)\s+x\s+(\d+)",
-            "file_size": r"read (\d+) bytes",
-            "date_time": r"log started (.+ \d{4})",
-            "render_time": r"render done in (\d+:\d+\.\d+)",
-            "memory_used": r"peak CPU memory used\s+([\d\.]+MB)",
-            "aov_count": r"preparing\s+(\d+)\s+AOV.*\((\d+)\s+deep\s+AOVs\)",
-            "cpu_gpu": r"using\s+(CPU|GPU)",
-            "output_file": r"writing file `([^`]+)'",
-        }
-
         # Iterate through each line and apply regex patterns
         for line in self.lines:
             # frame number
-            match = re.search(pattern["frame_number"], line)
+            match = self.PATTERNS["frame_number"].search(line)
             if match:
                 data["frame_number"] = match.group(1)
             # camera
-            match = re.search(pattern["camera"], line)
+            match = self.PATTERNS["camera"].search(line)
             if match:
                 data["camera"] = match.group(1)
             # resolution
-            match = re.search(pattern["resolution"], line)
+            match = self.PATTERNS["resolution"].search(line)
             if match:
                 data["resolution"] = f"{match.group(1)}x{match.group(2)}"
             # file size
-            match = re.search(pattern["file_size"], line)
+            match = self.PATTERNS["file_size"].search(line)
             if match:
                 bytes_to_mb = float(match.group(1)) * 0.000001
                 data["file_size"] = f"{bytes_to_mb:.2f}" + " MB"
             # render time
-            match = re.search(pattern["render_time"], line)
+            match = self.PATTERNS["render_time"].search(line)
             if match:
                 data["render_time"] = match.group(1)
             # date time
-            match = re.search(pattern["date_time"], line)
+            match = self.PATTERNS["date_time"].search(line)
             if match:
                 data["date_time"] = match.group(1)
             # memory used
-            match = re.search(pattern["memory_used"], line)
+            match = self.PATTERNS["memory_used"].search(line)
             if match:
                 data["memory_used"] = match.group(1)
             # aov count
-            match = re.search(pattern["aov_count"], line)
+            match = self.PATTERNS["aov_count"].search(line)
             if match:
                 data["aov_count"] = (
                     match.group(1) + " (" + match.group(2) + " deep)"
                 )
             # cpu gpu
-            match = re.search(pattern["cpu_gpu"], line)
+            match = self.PATTERNS["cpu_gpu"].search(line)
             if match:
                 data["cpu_gpu"] = match.group(1)
             # output file
-            match = re.search(pattern["output_file"], line)
+            match = self.PATTERNS["output_file"].search(line)
             if match:
                 data["output_file"] = match.group(1)
 
@@ -137,44 +243,32 @@ class ArnoldLogParser:
             "arnold_version": "Can't parse details from log.",
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "cpu": r"\|\s*\d+\s+x\s+(.*?)\s+\(",
-            "core_count": r"\(([^()]+cores[^()]+)\)",
-            "worker_ram": r"with\s+(\d+MB)",
-            "host_application": r"host application:\s*(.*?)(?:\s+Maya\s+([\d.]+))?$",
-            "arnold_version": r"(Arnold\s+\d+\.\d+\.\d+\.\d+)",
-        }
-
-        # Combined pattern for CPU info with cores and RAM
-        combined_pattern = r"(\d+)\s*x\s*(.*?)\s*\((\d+)\s*cores?,\s*(\d+)\s*logical\)\s*with\s*(\d+)MB"
-
         for line in self.lines:
             # CPU count
             if "cores" in line and "logical" in line:
-                match = re.search(pattern["cpu"], line)
+                match = self.PATTERNS["cpu"].search(line)
                 if match:
                     data["cpu"] = match.group(1)
 
             # Core count
             if "cores" in line and "logical" in line:
-                match = re.search(pattern["core_count"], line)
+                match = self.PATTERNS["core_count"].search(line)
                 if match:
                     data["core_count"] = match.group(1)
 
             # Worker ram
             if "cores" in line and "logical" in line:
-                match = re.search(pattern["worker_ram"], line)
+                match = self.PATTERNS["worker_ram"].search(line)
                 if match:
                     data["worker_ram"] = match.group(1)
 
             # Host application
-            match = re.search(pattern["host_application"], line)
+            match = self.PATTERNS["host_application"].search(line)
             if match:
                 data["host_application"] = match.group(1)
 
             # Arnold version
-            match = re.search(pattern["arnold_version"], line)
+            match = self.PATTERNS["arnold_version"].search(line)
             if match:
                 data["arnold_version"] = match.group(1)
 
@@ -227,22 +321,15 @@ class ArnoldLogParser:
             "ocio_config": "Can't parse details from log.",
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "colour_space": r'rendering color space is\s+"([^"]+)"',
-            "ocio_config": r'from the OCIO environment variable (\S+)',
-
-        }
-
         # Iterate through each line and apply regex patterns
         for line in self.lines:
             # colour space
-            match = re.search(pattern["colour_space"], line)
+            match = self.PATTERNS["colour_space"].search(line)
             if match:
                 data["colour_space"] = match.group(1)
 
             # ocio config
-            match = re.search(pattern["ocio_config"], line)
+            match = self.PATTERNS["ocio_config"].search(line)
             if match:
                 data["ocio_config"] = match.group(1)
 
@@ -257,31 +344,22 @@ class ArnoldLogParser:
             "node_init_time": ""
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "no_of_lights": r'there are (\d+) light[s]?',
-            "no_of_objects": r'and (\d+) objects',
-            "no_of_alembics": r'\|\s+(\d+)\s+alembic',
-            "node_init_time": r'node init\s+([\d:.]+)'
-
-        }
-
         # Iterate through each line and apply regex patterns
         for line in self.lines:
             # Number of lights
-            match = re.search(pattern["no_of_lights"], line)
+            match = self.PATTERNS["no_of_lights"].search(line)
             if match:
                 data["no_of_lights"] = match.group(1)
             # Number of objects
-            match = re.search(pattern["no_of_objects"], line)
+            match = self.PATTERNS["no_of_objects"].search(line)
             if match:
                 data["no_of_objects"] = match.group(1)
             # Total Nodes Initialised
-            match = re.search(pattern["no_of_alembics"], line)
+            match = self.PATTERNS["no_of_alembics"].search(line)
             if match:
                 data["no_of_alembics"] = match.group(1)
             # Node initialization time
-            match = re.search(pattern["node_init_time"], line)
+            match = self.PATTERNS["node_init_time"].search(line)
             if match:
                 data["node_init_time"] = match.group(1)
 
@@ -300,52 +378,38 @@ class ArnoldLogParser:
             "transparency": ""
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "aa": r",\s*(\d+)\s+AA samples",
-            "aa_max": r"AA samples max\s+(\d+)",
-            "diffuse": r"diffuse\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
-            "specular": r"specular\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
-            "transmission": r"transmission\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
-            "volume": r"volume indirect\s+(?:samples\s+(\d+)\s+/ depth\s+(\d+)|<disabled(?: by depth)?>)",
-            "total": r"total\s+depth\s+(\d+)",
-            "bssrdf": r"bssrdf\s+<([^>]+)>",
-            "light": r"light\s+<([^>]+)>",
-            "transparency": r"transparency\s+depth\s+(\d+)"
-        }
-
         # Iterate through each line and apply regex patterns
         for line in self.lines:
-            # Number of lights
-            match = re.search(pattern["aa"], line)
+            # AA samples
+            match = self.PATTERNS["aa"].search(line)
             if match:
                 data["aa"] = match.group(1)
-            # Number of objects
-            match = re.search(pattern["diffuse"], line)
+            # Diffuse
+            match = self.PATTERNS["diffuse"].search(line)
             if match:
                 data["diffuse"] = match.group(1)
-            # Total Nodes Initialised
-            match = re.search(pattern["specular"], line)
+            # Specular
+            match = self.PATTERNS["specular"].search(line)
             if match:
                 data["specular"] = match.group(1)
-            # Node initialization time
-            match = re.search(pattern["transmission"], line)
+            # Transmission
+            match = self.PATTERNS["transmission"].search(line)
             if match:
                 data["transmission"] = match.group(1)
-            # Number of lights
-            match = re.search(pattern["volume"], line)
+            # Volume
+            match = self.PATTERNS["volume"].search(line)
             if match:
                 data["volume"] = match.group(1)
-            # Number of objects
-            match = re.search(pattern["total"], line)
+            # Total
+            match = self.PATTERNS["total"].search(line)
             if match:
                 data["total"] = match.group(1)
-            # Total Nodes Initialised
-            match = re.search(pattern["bssrdf"], line)
+            # BSSRDF
+            match = self.PATTERNS["bssrdf"].search(line)
             if match:
                 data["bssrdf"] = match.group(1)
-            # Node initialization time
-            match = re.search(pattern["transparency"], line)
+            # Transparency
+            match = self.PATTERNS["transparency"].search(line)
             if match:
                 data["transparency"] = match.group(1)
 
@@ -355,16 +419,8 @@ class ArnoldLogParser:
         """Get render progress information."""
         data = {}
 
-        # Regex patterns for extracting information
-        pattern = {
-            "progress": r"(\d+)% done - (\d+) rays/pixel",
-        }
-
-        progress_dict = {}
-        # pattern = re.compile(r"(\d+)% done - (\d+) rays/pixel")
-
         for line in self.lines:
-            match = re.search(pattern["progress"], line)
+            match = self.PATTERNS["progress"].search(line)
             if match:
                 percent = str(match.group(1)).zfill(3)
                 rays_per_pixel = int(match.group(2))
@@ -380,34 +436,28 @@ class ArnoldLogParser:
             "unaccounted": 0
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "scene_creation": r"scene creation time\s+(\d+:\d+\.\d+)",
-            "ass_parsing": r"ass parsing\s+(\d+:\d+\.\d+)",
-            "unaccounted": r"unaccounted\s+(\d+:\d+\.\d+)"
-        }
-
         # Iterate through each line and apply regex patterns
         for line in self.lines:
             # Scene Creation
-            match = re.search(pattern["scene_creation"], line)
+            match = self.PATTERNS["scene_creation"].search(line)
             if match:
                 raw_data = match.group(1)
                 data["scene_creation"] = self.time_to_seconds(raw_data)
             # Ass parsing
-            match = re.search(pattern["ass_parsing"], line)
+            match = self.PATTERNS["ass_parsing"].search(line)
             if match:
                 raw_data = match.group(1)
                 data["ass_parsing"] = self.time_to_seconds(raw_data)
-            # Unaccounted
-            match = re.search(pattern["unaccounted"], line)
-            if match:
-                raw_data = match.group(1)
-                data["unaccounted"] = self.time_to_seconds(raw_data)
+            # Unaccounted (reusing the pattern)
+            if "unaccounted" in line and ":" in line:
+                match = self.PATTERNS["unaccounted"].search(line)
+                if match:
+                    raw_data = match.group(1)
+                    data["unaccounted"] = self.time_to_seconds(raw_data)
 
         return data
 
-    def get_render_time(self) -> Tuple[float, str]:
+    def get_render_time(self) -> Dict[str, float]:
         """Get all render time stats."""
         data = {
             "frame_time": 0,
@@ -427,102 +477,68 @@ class ArnoldLogParser:
             "unaccounted": 0,
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "frame_time": r"frame time\s+(\d+:\d+\.\d+)",
-            "license_checkout_time": r"license checkout time\s+(\d+:\d+\.\d+)",
-            "node_init": r"node init\s+(\d+:\d+\.\d+)",
-            "sanity_checks": r"sanity checks\s+(\d+:\d+\.\d+)",
-            "driver_init_close": r"driver init/close\s+(\d+:\d+\.\d+)",
-            "rendering": r"rendering\s+(\d+:\d+\.\d+)",
-            "subdivision": r"subdivision\s+(\d+:\d+\.\d+)",
-            "threads_blocked": r"threads blocked\s+(\d+:\d+\.\d+)",
-            "mesh_processing": r"mesh processing\s+(\d+:\d+\.\d+)",
-            "displacement": r"displacement\s+(\d+:\d+\.\d+)",
-            "accel_building": r"accel building\s+(\d+:\d+\.\d+)",
-            "importance_maps": r"importance maps\s+(\d+:\d+\.\d+)",
-            "output_driver": r"output driver\s+(\d+:\d+\.\d+)",
-            "pixel_rendering": r"pixel rendering\s+(\d+:\d+\.\d+)",
-            "unaccounted": r"unaccounted\s+(\d+:\d+\.\d+)",
-        }
-
         # Iterate through each line and apply regex patterns
         for line in self.lines:
             # Frame Time
-            match = re.search(pattern["frame_time"], line)
+            match = self.PATTERNS["frame_time"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["frame_time"] = self.time_to_seconds(raw_data)
+                data["frame_time"] = self.time_to_seconds(match.group(1))
             # License Checkout Time
-            match = re.search(pattern["license_checkout_time"], line)
+            match = self.PATTERNS["license_checkout_time"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["license_checkout_time"] = self.time_to_seconds(raw_data)
+                data["license_checkout_time"] = self.time_to_seconds(match.group(1))
             # Node Init
-            match = re.search(pattern["node_init"], line)
+            match = self.PATTERNS["node_init"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["node_init"] = self.time_to_seconds(raw_data)
+                data["node_init"] = self.time_to_seconds(match.group(1))
             # Sanity Checks
-            match = re.search(pattern["sanity_checks"], line)
+            match = self.PATTERNS["sanity_checks"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["sanity_checks"] = self.time_to_seconds(raw_data)
+                data["sanity_checks"] = self.time_to_seconds(match.group(1))
             # Driver Init/Close
-            match = re.search(pattern["driver_init_close"], line)
+            match = self.PATTERNS["driver_init_close"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["driver_init_close"] = self.time_to_seconds(raw_data)
+                data["driver_init_close"] = self.time_to_seconds(match.group(1))
             # Rendering
-            match = re.search(pattern["rendering"], line)
+            match = self.PATTERNS["rendering"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["rendering"] = self.time_to_seconds(raw_data)
+                data["rendering"] = self.time_to_seconds(match.group(1))
             # Subdivision
-            match = re.search(pattern["subdivision"], line)
+            match = self.PATTERNS["subdivision"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["subdivision"] = self.time_to_seconds(raw_data)
+                data["subdivision"] = self.time_to_seconds(match.group(1))
             # Threads Blocked
-            match = re.search(pattern["threads_blocked"], line)
+            match = self.PATTERNS["threads_blocked"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["threads_blocked"] = self.time_to_seconds(raw_data)
+                data["threads_blocked"] = self.time_to_seconds(match.group(1))
             # Mesh Processing
-            match = re.search(pattern["mesh_processing"], line)
+            match = self.PATTERNS["mesh_processing"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["mesh_processing"] = self.time_to_seconds(raw_data)
+                data["mesh_processing"] = self.time_to_seconds(match.group(1))
             # Displacement
-            match = re.search(pattern["displacement"], line)
+            match = self.PATTERNS["displacement"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["displacement"] = self.time_to_seconds(raw_data)
+                data["displacement"] = self.time_to_seconds(match.group(1))
             # Accel Building
-            match = re.search(pattern["accel_building"], line)
+            match = self.PATTERNS["accel_building"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["accel_building"] = self.time_to_seconds(raw_data)
+                data["accel_building"] = self.time_to_seconds(match.group(1))
             # Importance Maps
-            match = re.search(pattern["importance_maps"], line)
+            match = self.PATTERNS["importance_maps"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["importance_maps"] = self.time_to_seconds(raw_data)
+                data["importance_maps"] = self.time_to_seconds(match.group(1))
             # Output Driver
-            match = re.search(pattern["output_driver"], line)
+            match = self.PATTERNS["output_driver"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["output_driver"] = self.time_to_seconds(raw_data)
+                data["output_driver"] = self.time_to_seconds(match.group(1))
             # Pixel Rendering
-            match = re.search(pattern["pixel_rendering"], line)
+            match = self.PATTERNS["pixel_rendering"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["pixel_rendering"] = self.time_to_seconds(raw_data)
+                data["pixel_rendering"] = self.time_to_seconds(match.group(1))
             # Unaccounted
-            match = re.search(pattern["unaccounted"], line)
+            match = self.PATTERNS["unaccounted"].search(line)
             if match:
-                raw_data = match.group(1)
-                data["unaccounted"] = self.time_to_seconds(raw_data)
+                data["unaccounted"] = self.time_to_seconds(match.group(1))
 
         return data
 
@@ -559,142 +575,13 @@ class ArnoldLogParser:
             "unaccounted": 0,
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "peak_CPU_memory_used": r"peak CPU memory used\s+([\d\.]+)MB",
-            "at_startup": r"at startup\s+([\d\.]+)MB",
-            "AOV_samples": r"AOV samples\s+([\d\.]+)MB",
-            "output_buffers": r"output buffers\s+([\d\.]+)MB",
-            "framebuffers": r"framebuffers\s+([\d\.]+)MB",
-            "node_overhead": r"node overhead\s+([\d\.]+)MB",
-            "message_passing": r"message passing\s+([\d\.]+)MB",
-            "memory_pools": r"memory pools\s+([\d\.]+)MB",
-            "geometry": r"geometry\s+([\d\.]+)MB",
-            "polymesh": r"polymesh\s+([\d\.]+)MB",
-            "vertices": r"vertices\s+([\d\.]+)MB",
-            "vertex_indices": r"vertex indices\s+([\d\.]+)MB",
-            "packed_normals": r"packed normals\s+([\d\.]+)MB",
-            "normal_indices": r"normal indices\s+([\d\.]+)MB",
-            "uv_coords": r"uv coords\s+([\d\.]+)MB",
-            "uv_coords_idxs": r"uv coords idxs\s+([\d\.]+)MB",
-            "uniform_indices": r"uniform indices\s+([\d\.]+)MB",
-            "userdata": r"userdata\s+([\d\.]+)MB",
-            "subdivs": r"subdivs\s+([\d\.]+)MB",
-            "accel_structs": r"accel structs\s+([\d\.]+)MB",
-            "skydome_importance_map": r"skydome importance map\s+([\d\.]+)MB",
-            "strings": r"strings\s+([\d\.]+)MB",
-            "texture_cache": r"texture cache\s+([\d\.]+)MB",
-            "profiler": r"profiler\s+([\d\.]+)MB",
-            "backtrace_handler": r"backtrace handler\s+([\d\.]+)MB",
-            "unaccounted": r"unaccounted\s+([\d\.]+)MB",
-        }
-
-        # Iterate through each line and apply regex patterns
+        # Iterate through each line and apply compiled regex patterns
         for line in self.lines:
-            # Peak CPU memory used
-            match = re.search(pattern["peak_CPU_memory_used"], line)
-            if match:
-                data["peak_CPU_memory_used"] = match.group(1)
-            # At Startup
-            match = re.search(pattern["at_startup"], line)
-            if match:
-                data["at_startup"] = match.group(1)
-            # AOV Samples
-            match = re.search(pattern["AOV_samples"], line)
-            if match:
-                data["AOV_samples"] = match.group(1)
-            # Output Buffers
-            match = re.search(pattern["output_buffers"], line)
-            if match:
-                data["output_buffers"] = match.group(1)
-            # Framebuffers
-            match = re.search(pattern["framebuffers"], line)
-            if match:
-                data["framebuffers"] = match.group(1)
-            # Node Overhead
-            match = re.search(pattern["node_overhead"], line)
-            if match:
-                data["node_overhead"] = match.group(1)
-            # Message Passing
-            match = re.search(pattern["message_passing"], line)
-            if match:
-                data["message_passing"] = match.group(1)
-            # Memory Pools
-            match = re.search(pattern["memory_pools"], line)
-            if match:
-                data["memory_pools"] = match.group(1)
-            # Geometry
-            match = re.search(pattern["geometry"], line)
-            if match:
-                data["geometry"] = match.group(1)
-            # Polymesh
-            match = re.search(pattern["polymesh"], line)
-            if match:
-                data["polymesh"] = match.group(1)
-            # Vertices
-            match = re.search(pattern["vertices"], line)
-            if match:
-                data["vertices"] = match.group(1)
-            # Vertex Indices
-            match = re.search(pattern["vertex_indices"], line)
-            if match:
-                data["vertex_indices"] = match.group(1)
-            # Packed Normals
-            match = re.search(pattern["packed_normals"], line)
-            if match:
-                data["packed_normals"] = match.group(1)
-            # Normal Indices
-            match = re.search(pattern["normal_indices"], line)
-            if match:
-                data["normal_indices"] = match.group(1)
-            # UV Coords
-            match = re.search(pattern["uv_coords"], line)
-            if match:
-                data["uv_coords"] = match.group(1)
-            # UV Coords Indices
-            match = re.search(pattern["uv_coords_idxs"], line)
-            if match:
-                data["uv_coords_idxs"] = match.group(1)
-            # Uniform Indices
-            match = re.search(pattern["uniform_indices"], line)
-            if match:
-                data["uniform_indices"] = match.group(1)
-            # Userdata
-            match = re.search(pattern["userdata"], line)
-            if match:
-                data["userdata"] = match.group(1)
-            # Subdivs
-            match = re.search(pattern["subdivs"], line)
-            if match:
-                data["subdivs"] = match.group(1)
-            # Accel Structs
-            match = re.search(pattern["accel_structs"], line)
-            if match:
-                data["accel_structs"] = match.group(1)
-            # Skydome Importance Map
-            match = re.search(pattern["skydome_importance_map"], line)
-            if match:
-                data["skydome_importance_map"] = match.group(1)
-            # Strings
-            match = re.search(pattern["strings"], line)
-            if match:
-                data["strings"] = match.group(1)
-            # Texture Cache
-            match = re.search(pattern["texture_cache"], line)
-            if match:
-                data["texture_cache"] = match.group(1)
-            # Profiler
-            match = re.search(pattern["profiler"], line)
-            if match:
-                data["profiler"] = match.group(1)
-            # Backtrace Handler
-            match = re.search(pattern["backtrace_handler"], line)
-            if match:
-                data["backtrace_handler"] = match.group(1)
-            # Unaccounted
-            match = re.search(pattern["unaccounted"], line)
-            if match:
-                data["unaccounted"] = match.group(1)
+            for key in data.keys():
+                if key in self.PATTERNS:
+                    match = self.PATTERNS[key].search(line)
+                    if match:
+                        data[key] = match.group(1)
 
         return data
 
@@ -707,30 +594,22 @@ class ArnoldLogParser:
             "specular_transmit": 0,
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "camera": r"\|\s+camera\s+(\d+)",
-            "shadow": r"\|\s+shadow\s+(\d+)",
-            "specular_reflect": r"\|\s+specular_reflect\s+(\d+)",
-            "specular_transmit": r"\|\s+specular_transmit\s+(\d+)",
-        }
-
-        # Iterate through each line and apply regex patterns
+        # Iterate through each line and apply compiled regex patterns
         for line in self.lines:
             # Camera
-            match = re.search(pattern["camera"], line)
+            match = self.PATTERNS["camera_rays"].search(line)
             if match:
                 data["camera"] = int(match.group(1))
             # Shadow
-            match = re.search(pattern["shadow"], line)
+            match = self.PATTERNS["shadow_rays"].search(line)
             if match:
                 data["shadow"] = int(match.group(1))
             # Specular Reflect
-            match = re.search(pattern["specular_reflect"], line)
+            match = self.PATTERNS["specular_reflect"].search(line)
             if match:
                 data["specular_reflect"] = int(match.group(1))
             # Specular Transmit
-            match = re.search(pattern["specular_transmit"], line)
+            match = self.PATTERNS["specular_transmit"].search(line)
             if match:
                 data["specular_transmit"] = int(match.group(1))
 
@@ -746,37 +625,13 @@ class ArnoldLogParser:
             "importance": 0,
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "primary": r"\|\s+primary\s+(\d+)",
-            "transparent_shadow": r"\|\s+transparent_shadow\s+(\d+)",
-            "background": r"\|\s+background\s+(\d+)",
-            "light_filter": r"\|\s+light_filter\s+(\d+)",
-            "importance": r"\|\s+importance\s+(\d+)",
-        }
-
-        # Iterate through each line and apply regex patterns
+        # Iterate through each line and apply compiled regex patterns
         for line in self.lines:
-            # Primary
-            match = re.search(pattern["primary"], line)
-            if match:
-                data["primary"] = int(match.group(1))
-            # Transparent Shadow
-            match = re.search(pattern["transparent_shadow"], line)
-            if match:
-                data["transparent_shadow"] = int(match.group(1))
-            # Background
-            match = re.search(pattern["background"], line)
-            if match:
-                data["background"] = int(match.group(1))
-            # Light Filter
-            match = re.search(pattern["light_filter"], line)
-            if match:
-                data["light_filter"] = int(match.group(1))
-            # Importance
-            match = re.search(pattern["importance"], line)
-            if match:
-                data["importance"] = int(match.group(1))
+            for key in data.keys():
+                if key in self.PATTERNS:
+                    match = self.PATTERNS[key].search(line)
+                    if match:
+                        data[key] = int(match.group(1))
 
         return data
 
@@ -789,32 +644,14 @@ class ArnoldLogParser:
             "subdivision_surfaces": 0,
         }
 
-        pattern = {
-            "polymesh_count": r"\|\s+polymeshes\s+(\d+)",
-            "proc_count": r"\|\s+procs\s+(\d+)",
-            "triangle_count": r"\|\s+unique triangles\s+(\d+)",
-            "subdivision_surfaces": r"\|\s+subdivs\s+(\d+)",
-        }
-
-        # Iterate through each line and apply regex patterns
+        # Iterate through each line and apply compiled regex patterns
         for line in self.lines:
-            # Polymesh Count
-            match = re.search(pattern["polymesh_count"], line)
-            if match:
-                data["polymesh_count"] = int(match.group(1))
-            # Curve Count
-            match = re.search(pattern["proc_count"], line)
-            if match:
-                data["proc_count"] = int(match.group(1))
-            # Total Polygons
-            match = re.search(pattern["triangle_count"], line)
-            if match:
-                data["triangle_count"] = int(match.group(1))
-            # Subdivision Surfaces
-            match = re.search(pattern["subdivision_surfaces"], line)
-            if match:
-                data["subdivision_surfaces"] = int(match.group(1))
-        
+            for key in data.keys():
+                if key in self.PATTERNS:
+                    match = self.PATTERNS[key].search(line)
+                    if match:
+                        data[key] = int(match.group(1))
+
         return data
 
     def get_texture_stats(self) -> Dict[str, any]:
@@ -828,42 +665,14 @@ class ArnoldLogParser:
             "broken_invalid_images": "",
         }
 
-        # Regex patterns for extracting information
-        pattern = {
-            "peak_cache_memory": r"\|\s+Peak cache memory\s*:\s*([\d.]+)\s*GB",
-            "pixel_data_read": r"\|\s+Pixel data read\s*:\s*([\d.]+)\s*GB",
-            "unique_images": r"\|\s+Images\s*:\s*(\d+)\s+unique",
-            "duplicate_images": r"\|\s+(\d+)\s+were exact duplicates of other images",
-            "constant_value_images": r"\|\s+(\d+)\s+were constant-valued",
-            "broken_invalid_images": r"\|\s+Broken or invalid files:\s+(\d+)",
-        }
-
-        # Iterate through each line and apply regex patterns
+        # Iterate through each line and apply compiled regex patterns
         for line in self.lines:
-            # Peak Cache Memory
-            match = re.search(pattern["peak_cache_memory"], line)
-            if match:
-                data["peak_cache_memory"] = match.group(1)
-            # Pixel Data Read
-            match = re.search(pattern["pixel_data_read"], line)
-            if match:
-                data["pixel_data_read"] = match.group(1)
-            # Unique Images
-            match = re.search(pattern["unique_images"], line)
-            if match:
-                data["unique_images"] = match.group(1)
-            # Duplicate Images
-            match = re.search(pattern["duplicate_images"], line)
-            if match:
-                data["duplicate_images"] = match.group(1)
-            # Constant Value Images
-            match = re.search(pattern["constant_value_images"], line)
-            if match:
-                data["constant_value_images"] = match.group(1)
-            # Broken/Invalid Images
-            match = re.search(pattern["broken_invalid_images"], line)
-            if match:
-                data["broken_invalid_images"] = match.group(1)
+            for key in data.keys():
+                if key in self.PATTERNS:
+                    match = self.PATTERNS[key].search(line)
+                    if match:
+                        data[key] = match.group(1)
+
         return data
 
     def _format_time(self, seconds: float) -> str:

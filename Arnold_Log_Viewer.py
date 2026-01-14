@@ -11,9 +11,7 @@ Version: 0.1.0
 
 # IMPORTS
 # =========================
-from locale import normalize
 import streamlit as st
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from log_parser import ArnoldLogParser
