@@ -1,6 +1,4 @@
-from email import message
 import re
-import streamlit as st
 from typing import Dict, List, Tuple
 
 
@@ -16,8 +14,7 @@ class ArnoldLogParser:
 
         for line in self.lines:
             if "WARNING |" in line:
-                message = line.split("|")
-                data.append(message)
+                data.append(line)
         return data
 
     def get_errors(self) -> List[str]:
