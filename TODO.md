@@ -21,6 +21,12 @@
 
 ## 🎯 Next Session
 
+### Security & Dependencies
+- [ ] **Security #1**: Fix Dependabot vulnerabilities - 9 vulnerabilities found (5 high, 4 moderate)
+  - Review: https://github.com/carlocarfora/arnold-log-viewer/security/dependabot
+  - Update vulnerable dependencies in requirements.txt
+  - Test app after dependency updates
+
 ### Remaining Cleanup
 - [ ] **Bug #7**: Remove unused variables (low priority cleanup)
 
@@ -56,7 +62,9 @@
 ## 📝 Notes
 
 ### Known Issues
-- GitHub Dependabot found 9 vulnerabilities (5 high, 4 moderate) - review and update dependencies
+- ⚠️ **Security**: GitHub Dependabot found 9 vulnerabilities (5 high, 4 moderate)
+  - Link: https://github.com/carlocarfora/arnold-log-viewer/security/dependabot
+  - Action required: Update dependencies in next session
 
 ### Performance
 - Parser now 10-50x faster on large logs thanks to compiled regex patterns
