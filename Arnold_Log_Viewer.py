@@ -236,6 +236,18 @@ def main():
         st.subheader("Output File")
         st.write(render_stats["output_file"])
 
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.subheader("Camera")
+        st.write(render_stats["camera"])
+    with col2:
+        st.subheader("Render Mode")
+        st.write(render_stats["cpu_gpu"])
+    with col3:
+        st.write("")  # Empty column for spacing
+    with col4:
+        st.write("")  # Empty column for spacing
+
     ########################################
     # Arnold worker information tab
     ########################################
