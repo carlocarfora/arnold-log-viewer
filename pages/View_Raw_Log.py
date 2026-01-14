@@ -24,7 +24,7 @@ from Arnold_Log_Viewer import sidebar
 
 # PAGE CONFIGURATION
 # =========================
-st.set_page_config(page_title="Raw Log File",  layout="wide")
+# Note: set_page_config is called in main app, cannot call it here
 
 
 # MAIN FUNCTION

@@ -542,37 +542,37 @@ class ArnoldLogParser:
 
         return data
 
-    def get_memory_stats(self) -> Dict[str, str]:
+    def get_memory_stats(self) -> Dict[str, float]:
         """Get detailed memory statistics."""
         data = {
-            "peak_CPU_memory_used": 0,
-            "at_startup": 0,
-            "AOV_samples": 0,
-            "output_buffers": 0,
-            "framebuffers": 0,
-            "node_overhead": 0,
-            "message_passing": 0,
-            "memory_pools": 0,
-            "geometry": 0,
-            "polymesh": 0,
-            "vertices": 0,
-            "vertex_indices": 0,
-            "packed_normals": 0,
-            "normal_indices": 0,
-            "uv_coords": 0,
-            "uv_coords_idxs": 0,
-            "P": 0,
-            "N": 0,
-            "uniform_indices": 0,
-            "userdata": 0,
-            "subdivs": 0,
-            "accel_structs": 0,
-            "skydome_importance_map": 0,
-            "strings": 0,
-            "texture_cache": 0,
-            "profiler": 0,
-            "backtrace_handler": 0,
-            "unaccounted": 0,
+            "peak_CPU_memory_used": 0.0,
+            "at_startup": 0.0,
+            "AOV_samples": 0.0,
+            "output_buffers": 0.0,
+            "framebuffers": 0.0,
+            "node_overhead": 0.0,
+            "message_passing": 0.0,
+            "memory_pools": 0.0,
+            "geometry": 0.0,
+            "polymesh": 0.0,
+            "vertices": 0.0,
+            "vertex_indices": 0.0,
+            "packed_normals": 0.0,
+            "normal_indices": 0.0,
+            "uv_coords": 0.0,
+            "uv_coords_idxs": 0.0,
+            "P": 0.0,
+            "N": 0.0,
+            "uniform_indices": 0.0,
+            "userdata": 0.0,
+            "subdivs": 0.0,
+            "accel_structs": 0.0,
+            "skydome_importance_map": 0.0,
+            "strings": 0.0,
+            "texture_cache": 0.0,
+            "profiler": 0.0,
+            "backtrace_handler": 0.0,
+            "unaccounted": 0.0,
         }
 
         # Iterate through each line and apply compiled regex patterns
@@ -581,7 +581,10 @@ class ArnoldLogParser:
                 if key in self.PATTERNS:
                     match = self.PATTERNS[key].search(line)
                     if match:
-                        data[key] = match.group(1)
+                        try:
+                            data[key] = float(match.group(1))
+                        except ValueError:
+                            pass  # Keep default 0.0 if conversion fails
 
         return data
 
@@ -615,7 +618,7 @@ class ArnoldLogParser:
 
         return data
 
-    def get_shader_stats(self) -> Dict[str, any]:
+    def get_shader_stats(self) -> Dict[str, int]:
         """Get shader stats from log."""
         data = {
             "primary": 0,
@@ -631,11 +634,14 @@ class ArnoldLogParser:
                 if key in self.PATTERNS:
                     match = self.PATTERNS[key].search(line)
                     if match:
-                        data[key] = int(match.group(1))
+                        try:
+                            data[key] = int(match.group(1))
+                        except ValueError:
+                            pass
 
         return data
 
-    def get_geometry_stats(self) -> Dict[str, any]:
+    def get_geometry_stats(self) -> Dict[str, int]:
         """Get geometry statistics."""
         data = {
             "polymesh_count": 0,
@@ -650,19 +656,22 @@ class ArnoldLogParser:
                 if key in self.PATTERNS:
                     match = self.PATTERNS[key].search(line)
                     if match:
-                        data[key] = int(match.group(1))
+                        try:
+                            data[key] = int(match.group(1))
+                        except ValueError:
+                            pass
 
         return data
 
-    def get_texture_stats(self) -> Dict[str, any]:
+    def get_texture_stats(self) -> Dict[str, str]:
         """Get texture stats from log."""
         data = {
-            "peak_cache_memory": "",
-            "pixel_data_read": "",
-            "unique_images": "",
-            "duplicate_images": "",
-            "constant_value_images": "",
-            "broken_invalid_images": "",
+            "peak_cache_memory": "0",
+            "pixel_data_read": "0",
+            "unique_images": "0",
+            "duplicate_images": "0",
+            "constant_value_images": "0",
+            "broken_invalid_images": "0",
         }
 
         # Iterate through each line and apply compiled regex patterns

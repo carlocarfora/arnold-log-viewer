@@ -74,11 +74,19 @@ def display_bar_chart(
     else:
         df = values
 
+    # Ensure all values are numeric (convert to float if possible)
+    if isinstance(df, pd.DataFrame):
+        for col in df.columns:
+            try:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+            except:
+                pass
+
     st.bar_chart(
         df,
         x_label=_x_label,
         y_label=_y_label,
-        horizontal=_horizontal, 
+        horizontal=_horizontal,
         stack=_stack)
 
 
