@@ -321,10 +321,10 @@ def main():
     # Memory Statistics
     st.subheader("Memory")
     cols = st.columns(4)
-    cols[0].metric("Peak CPU Memory used","3784.42")
-    cols[1].metric("Startup Memory used", "2290.95")
-    cols[2].metric("Geometry Memory used","36.70")
-    cols[3].metric("Texture Memory used", "242.10")
+    cols[0].metric("Peak CPU Memory used", f"{memory_stats['peak_CPU_memory_used']} MB" if memory_stats['peak_CPU_memory_used'] else "N/A")
+    cols[1].metric("Startup Memory used", f"{memory_stats['at_startup']} MB" if memory_stats['at_startup'] else "N/A")
+    cols[2].metric("Geometry Memory used", f"{memory_stats['geometry']} MB" if memory_stats['geometry'] else "N/A")
+    cols[3].metric("Texture Memory used", f"{memory_stats['texture_cache']} MB" if memory_stats['texture_cache'] else "N/A")
     display_bar_chart(
         memory_stats,
         "Memory Used",
