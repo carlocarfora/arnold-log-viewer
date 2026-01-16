@@ -32,6 +32,23 @@ def has_data(data_dict, default_value="Can't parse details from log."):
             return True
     return False
 
+def format_time(seconds):
+    """Format time in a human-readable format.
+    Args:
+        seconds (float): Time in seconds
+    Returns:
+        str: Formatted time string
+    """
+    if seconds < 60:
+        return f"{seconds:.2f}s"
+    minutes = int(seconds // 60)
+    remaining_seconds = seconds % 60
+    if minutes < 60:
+        return f"{minutes}m {remaining_seconds:.2f}s"
+    hours = int(minutes // 60)
+    remaining_minutes = minutes % 60
+    return f"{hours}h {remaining_minutes}m {remaining_seconds:.2f}s"
+
 def get_performance_color(metric_name, value):
     """Get color indicator (delta) for performance metrics.
 
@@ -514,9 +531,9 @@ def main():
     # Scene creation time
     st.subheader("Scene Creation")
     cols = st.columns(3)
-    cols[0].metric("Scene Creation", f"{scene_creation['scene_creation']:.2f}s")
-    cols[1].metric("ASS Parsing", f"{scene_creation['ass_parsing']:.2f}s")
-    cols[2].metric("Unaccounted", f"{scene_creation['unaccounted']:.2f}s")
+    cols[0].metric("Scene Creation", format_time(scene_creation['scene_creation']))
+    cols[1].metric("ASS Parsing", format_time(scene_creation['ass_parsing']))
+    cols[2].metric("Unaccounted", format_time(scene_creation['unaccounted']))
     display_bar_chart(scene_creation, "Time", "Time as percentage")
 
     # Render time
@@ -527,40 +544,40 @@ def main():
             st.write("**Core Timing**")
             st.metric(
                 "Frame Time",
-                f"{render_time_stats['frame_time']:.2f}s",
+                format_time(render_time_stats['frame_time']),
                 delta=get_performance_color("frame time", render_time_stats['frame_time']),
                 delta_color="off"
             )
             st.metric(
                 "Rendering",
-                f"{render_time_stats['rendering']:.2f}s",
+                format_time(render_time_stats['rendering']),
                 delta=get_performance_color("rendering", render_time_stats['rendering']),
                 delta_color="off"
             )
             st.metric(
                 "Pixel Rendering",
-                f"{render_time_stats['pixel_rendering']:.2f}s",
+                format_time(render_time_stats['pixel_rendering']),
                 delta=get_performance_color("pixel rendering", render_time_stats['pixel_rendering']),
                 delta_color="off"
             )
-            st.metric("Node Init", f"{render_time_stats['node_init']:.2f}s")
-            st.metric("License Checkout", f"{render_time_stats['license_checkout_time']:.2f}s")
+            st.metric("Node Init", format_time(render_time_stats['node_init']))
+            st.metric("License Checkout", format_time(render_time_stats['license_checkout_time']))
 
         with col2:
             st.write("**Processing**")
-            st.metric("Mesh Processing", f"{render_time_stats['mesh_processing']:.2f}s")
-            st.metric("Subdivision", f"{render_time_stats['subdivision']:.2f}s")
-            st.metric("Displacement", f"{render_time_stats['displacement']:.2f}s")
-            st.metric("Accel Building", f"{render_time_stats['accel_building']:.2f}s")
-            st.metric("Importance Maps", f"{render_time_stats['importance_maps']:.2f}s")
+            st.metric("Mesh Processing", format_time(render_time_stats['mesh_processing']))
+            st.metric("Subdivision", format_time(render_time_stats['subdivision']))
+            st.metric("Displacement", format_time(render_time_stats['displacement']))
+            st.metric("Accel Building", format_time(render_time_stats['accel_building']))
+            st.metric("Importance Maps", format_time(render_time_stats['importance_maps']))
 
         with col3:
             st.write("**Overhead**")
-            st.metric("Sanity Checks", f"{render_time_stats['sanity_checks']:.2f}s")
-            st.metric("Driver Init/Close", f"{render_time_stats['driver_init_close']:.2f}s")
-            st.metric("Output Driver", f"{render_time_stats['output_driver']:.2f}s")
-            st.metric("Threads Blocked", f"{render_time_stats['threads_blocked']:.2f}s")
-            st.metric("Unaccounted", f"{render_time_stats['unaccounted']:.2f}s")
+            st.metric("Sanity Checks", format_time(render_time_stats['sanity_checks']))
+            st.metric("Driver Init/Close", format_time(render_time_stats['driver_init_close']))
+            st.metric("Output Driver", format_time(render_time_stats['output_driver']))
+            st.metric("Threads Blocked", format_time(render_time_stats['threads_blocked']))
+            st.metric("Unaccounted", format_time(render_time_stats['unaccounted']))
 
     display_bar_chart(
         render_time_stats,
