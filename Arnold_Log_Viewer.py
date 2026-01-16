@@ -23,6 +23,15 @@ from log_parser import ArnoldLogParser
 
 # FUNCTIONS
 # =========================
+def has_data(data_dict, default_value="Can't parse details from log."):
+    """Check if a dictionary has any non-default, non-zero values."""
+    if not data_dict:
+        return False
+    for value in data_dict.values():
+        if value != default_value and value != 0 and value != 0.0 and value != "" and value != "0":
+            return True
+    return False
+
 def sidebar():
     """
     Create the sidebar for the app.
@@ -323,32 +332,41 @@ def main():
 
     # Node Init / Scene Contents
     st.subheader("Node Init / Scene Contents")
-    cols = st.columns(4)
-    cols[0].metric("Number of Lights", scene_info["no_of_lights"])
-    cols[1].metric("Number of Objects", scene_info["no_of_objects"])
-    cols[2].metric("Number of Alembics", scene_info["no_of_alembics"])
-    cols[3].metric("Node Init Time", scene_info["node_init_time"])
+    if has_data(scene_info, default_value=""):
+        cols = st.columns(4)
+        cols[0].metric("Number of Lights", scene_info["no_of_lights"] or "0")
+        cols[1].metric("Number of Objects", scene_info["no_of_objects"] or "0")
+        cols[2].metric("Number of Alembics", scene_info["no_of_alembics"] or "0")
+        cols[3].metric("Node Init Time", scene_info["node_init_time"] or "N/A")
+    else:
+        st.info("No scene initialization information found in log.")
 
     # Samples / Ray Depths
     st.subheader("Samples / Ray Depths")
-    cols = st.columns(4)
-    cols[0].metric("AA Samples", sample_info["aa"])
-    cols[1].metric("Diffuse", sample_info["diffuse"])
-    cols[2].metric("Specular", sample_info["specular"])
-    cols[3].metric("Transmission", sample_info["transmission"])
-    cols = st.columns(4)
-    cols[0].metric("Volume", sample_info["volume"])
-    cols[1].metric("Total", sample_info["total"])
-    cols[2].metric("BSSRDF", sample_info["bssrdf"])
-    cols[3].metric("Transparency", sample_info["transparency"])
+    if has_data(sample_info, default_value=""):
+        cols = st.columns(4)
+        cols[0].metric("AA Samples", sample_info["aa"] or "N/A")
+        cols[1].metric("Diffuse", sample_info["diffuse"] or "N/A")
+        cols[2].metric("Specular", sample_info["specular"] or "N/A")
+        cols[3].metric("Transmission", sample_info["transmission"] or "N/A")
+        cols = st.columns(4)
+        cols[0].metric("Volume", sample_info["volume"] or "N/A")
+        cols[1].metric("Total", sample_info["total"] or "N/A")
+        cols[2].metric("BSSRDF", sample_info["bssrdf"] or "N/A")
+        cols[3].metric("Transparency", sample_info["transparency"] or "N/A")
+    else:
+        st.info("No sampling information found in log. Enable detailed logging to see sample settings.")
 
     # Render Progress
     st.subheader("Render Progress")
-    display_bar_chart(
-        [progress_info],
-        "Rays Per Pixel",
-        "% of total ray count",
-    )
+    if progress_info:
+        display_bar_chart(
+            [progress_info],
+            "Rays Per Pixel",
+            "% of total ray count",
+        )
+    else:
+        st.info("No render progress information found in log.")
 
     # Scene creation time
     st.subheader("Scene Creation")
@@ -444,29 +462,41 @@ def main():
 
     # Ray Stats
     st.subheader("Rays")
-    display_bar_chart(ray_stats, "Rays", "Total rays per category")
+    if has_data(ray_stats):
+        display_bar_chart(ray_stats, "Rays", "Total rays per category")
+    else:
+        st.info("No ray statistics found in log. Enable detailed logging to see ray counts.")
 
     # Shader Stats
     st.subheader("Shaders")
-    display_bar_chart(shader_stats, "Shaders", "Shader calls per category.")
+    if has_data(shader_stats):
+        display_bar_chart(shader_stats, "Shaders", "Shader calls per category.")
+    else:
+        st.info("No shader statistics found in log. Enable detailed logging to see shader calls.")
 
     # Geometry statistics
     st.subheader("Geometry")
-    cols = st.columns(4)
-    cols[0].metric("Polymesh Count", geometry_stats["polymesh_count"])
-    cols[1].metric("Procedural Count", geometry_stats["proc_count"])
-    cols[2].metric("Triangle Count", geometry_stats["triangle_count"])
-    cols[3].metric("Subdivision Surfaces", geometry_stats["subdivision_surfaces"])
+    if has_data(geometry_stats):
+        cols = st.columns(4)
+        cols[0].metric("Polymesh Count", geometry_stats["polymesh_count"])
+        cols[1].metric("Procedural Count", geometry_stats["proc_count"])
+        cols[2].metric("Triangle Count", geometry_stats["triangle_count"])
+        cols[3].metric("Subdivision Surfaces", geometry_stats["subdivision_surfaces"])
+    else:
+        st.info("No geometry statistics found in log. Enable detailed logging to see geometry counts.")
 
     # Texture statistics
     st.subheader("Textures")
-    cols = st.columns(6)
-    cols[0].metric("Peak Cache Memory", texture_stats["peak_cache_memory"])
-    cols[1].metric("Pixel Data Read", texture_stats["pixel_data_read"])
-    cols[2].metric("Unique Images", texture_stats["unique_images"])
-    cols[3].metric("Duplicate Images", texture_stats["duplicate_images"])
-    cols[4].metric("Constant Value Images", texture_stats["constant_value_images"])
-    cols[5].metric("Broken/Invalid Images", texture_stats["broken_invalid_images"])
+    if has_data(texture_stats):
+        cols = st.columns(6)
+        cols[0].metric("Peak Cache Memory", texture_stats["peak_cache_memory"])
+        cols[1].metric("Pixel Data Read", texture_stats["pixel_data_read"])
+        cols[2].metric("Unique Images", texture_stats["unique_images"])
+        cols[3].metric("Duplicate Images", texture_stats["duplicate_images"])
+        cols[4].metric("Constant Value Images", texture_stats["constant_value_images"])
+        cols[5].metric("Broken/Invalid Images", texture_stats["broken_invalid_images"])
+    else:
+        st.info("No texture statistics found in log. Enable detailed logging to see texture info.")
 
     # Display Sidebar
     sidebar()
