@@ -23,6 +23,80 @@ from log_parser import ArnoldLogParser
 
 # FUNCTIONS
 # =========================
+def has_data(data_dict, default_value="Can't parse details from log."):
+    """Check if a dictionary has any non-default, non-zero values."""
+    if not data_dict:
+        return False
+    for value in data_dict.values():
+        if value != default_value and value != 0 and value != 0.0 and value != "" and value != "0":
+            return True
+    return False
+
+def format_time(seconds):
+    """Format time in a human-readable format.
+    Args:
+        seconds (float): Time in seconds
+    Returns:
+        str: Formatted time string
+    """
+    if seconds < 60:
+        return f"{seconds:.2f}s"
+    minutes = int(seconds // 60)
+    remaining_seconds = seconds % 60
+    if minutes < 60:
+        return f"{minutes}m {remaining_seconds:.2f}s"
+    hours = int(minutes // 60)
+    remaining_minutes = minutes % 60
+    return f"{hours}h {remaining_minutes}m {remaining_seconds:.2f}s"
+
+def format_memory(megabytes):
+    """Format memory in appropriate units (MB or GB).
+    Args:
+        megabytes (float): Memory size in megabytes
+    Returns:
+        str: Formatted memory string
+    """
+    if megabytes == 0:
+        return "0 MB"
+    elif megabytes < 1024:
+        return f"{megabytes:.2f} MB"
+    else:
+        gigabytes = megabytes / 1024
+        return f"{gigabytes:.2f} GB"
+
+def get_performance_color(metric_name, value):
+    """Get color indicator (delta) for performance metrics.
+
+    Returns a string for the delta parameter of st.metric():
+    - "🟢" for good performance
+    - "🟡" for moderate performance
+    - "🔴" for poor performance
+    """
+    try:
+        # Memory-based metrics (in MB)
+        if "memory" in metric_name.lower() or "mb" in str(value).lower():
+            mem_value = float(str(value).replace("MB", "").strip()) if isinstance(value, str) else float(value)
+            if mem_value < 1000:
+                return "🟢 Low"
+            elif mem_value < 5000:
+                return "🟡 Moderate"
+            else:
+                return "🔴 High"
+
+        # Time-based metrics (in seconds from render_time_stats)
+        elif metric_name.lower() in ["render time", "frame time", "rendering", "pixel rendering"]:
+            if value < 60:
+                return "🟢 Fast"
+            elif value < 300:
+                return "🟡 Moderate"
+            else:
+                return "🔴 Slow"
+
+    except (ValueError, TypeError, AttributeError):
+        pass
+
+    return None  # No color indicator
+
 def sidebar():
     """
     Create the sidebar for the app.
@@ -63,16 +137,20 @@ def display_bar_chart(
     convert_values=True,
 ):
     """
-    Display a bar chart using built in Streamlit chart.
+    Display an interactive bar chart using Plotly with tooltips and download.
     Parameters:
-    labels (list): The labels for the chart.
-    values (list): The values for the chart.
-    x_label (str): The x-axis label.
+    values: Dictionary or DataFrame of values
+    _index (str): The index label
+    _x_label (str): The x-axis label
+    _y_label (str): The y-axis label
+    _stack (str): Stack mode (not used in Plotly version)
+    _horizontal (bool): Whether to display horizontal bars
+    convert_values (bool): Whether to convert dict to DataFrame
     """
     if convert_values:
         df = pd.DataFrame(values, index=[str(_index)])
     else:
-        df = values
+        df = values if isinstance(values, pd.DataFrame) else pd.DataFrame(values)
 
     # Ensure all values are numeric (convert to float if possible)
     if isinstance(df, pd.DataFrame):
@@ -82,38 +160,109 @@ def display_bar_chart(
             except:
                 pass
 
-    st.bar_chart(
-        df,
-        x_label=_x_label,
-        y_label=_y_label,
-        horizontal=_horizontal,
-        stack=_stack)
+    # Create Plotly bar chart with better colors and interactivity
+    if _horizontal:
+        # Horizontal bar chart
+        fig = go.Figure()
+        for idx, row in df.iterrows():
+            fig.add_trace(go.Bar(
+                y=df.columns.tolist(),
+                x=row.tolist(),
+                orientation='h',
+                name=str(idx),
+                marker=dict(
+                    color=row.tolist(),
+                    colorscale='Viridis',
+                    showscale=True,
+                    colorbar=dict(title=_y_label or "Value")
+                ),
+                hovertemplate='<b>%{y}</b><br>' +
+                             f'{_y_label or "Value"}: %{{x:.2f}}<br>' +
+                             '<extra></extra>'
+            ))
+
+        fig.update_layout(
+            xaxis_title=_y_label or "Value",
+            yaxis_title=_x_label or "Category",
+            hovermode='closest',
+            showlegend=False,
+            height=max(400, len(df.columns) * 25),
+        )
+    else:
+        # Vertical bar chart
+        fig = go.Figure()
+        for idx, row in df.iterrows():
+            fig.add_trace(go.Bar(
+                x=df.columns.tolist(),
+                y=row.tolist(),
+                name=str(idx),
+                marker=dict(
+                    color=row.tolist(),
+                    colorscale='Viridis',
+                    showscale=True
+                ),
+                hovertemplate='<b>%{x}</b><br>' +
+                             f'{_y_label or "Value"}: %{{y:.2f}}<br>' +
+                             '<extra></extra>'
+            ))
+
+        fig.update_layout(
+            xaxis_title=_x_label or "Category",
+            yaxis_title=_y_label or "Value",
+            hovermode='closest',
+            showlegend=False,
+        )
+
+    # Add download button config
+    config = {
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': f'arnold_log_{_x_label.lower().replace(" ", "_")}',
+            'height': 800,
+            'width': 1200,
+            'scale': 2
+        },
+        'displayModeBar': True,
+        'displaylogo': False
+    }
+
+    st.plotly_chart(fig, use_container_width=True, config=config)
 
 
 def display_donut_chart(labels, values):
     """
-    Display a donut chart using Plotly.
+    Display an interactive donut chart using Plotly with tooltips and download.
 
     Parameters:
     labels (list): The labels for the chart.
     values (list): The values for the chart.
     """
-    # Create the donut chart
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.8)])
-
-    # Customize the layout to place the legend on the side
-    fig.update_layout(
-        width=300,  # Reduce width
-        height=300,
-        margin=dict(
-            t=5,  # Top padding
-            b=5,  # Bottom padding
-            l=5,  # Left padding
-            r=5,  # Right padding
+    # Create the donut chart with better colors
+    fig = go.Figure(data=[go.Pie(
+        labels=labels,
+        values=values,
+        hole=0.8,
+        marker=dict(
+            colors=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+                   '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'],
+            line=dict(color='#FFFFFF', width=2)
         ),
+        hovertemplate='<b>%{label}</b><br>' +
+                     'Value: %{value}<br>' +
+                     'Percentage: %{percent}<br>' +
+                     '<extra></extra>',
+        textposition='inside',
+        textinfo='percent+label'
+    )])
+
+    # Customize the layout
+    fig.update_layout(
+        width=300,
+        height=300,
+        margin=dict(t=5, b=5, l=5, r=5),
         legend=dict(
-            x=1,  # Position the legend on the right
-            y=0.8,  # Center the legend vertically
+            x=1,
+            y=0.8,
             traceorder="normal",
             orientation="h",
             font=dict(size=15),
@@ -122,9 +271,22 @@ def display_donut_chart(labels, values):
         ),
     )
 
-    # Display the chart in Streamlit
+    # Add download button config
+    config = {
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': 'arnold_log_donut_chart',
+            'height': 800,
+            'width': 800,
+            'scale': 2
+        },
+        'displayModeBar': True,
+        'displaylogo': False
+    }
+
+    # Display the chart
     with st.empty():
-        st.plotly_chart(fig, use_container_width=False)
+        st.plotly_chart(fig, use_container_width=False, config=config)
 
 
 # PAGE CONFIGURATION
@@ -178,12 +340,22 @@ def main():
     # Session state variable to share log file
     st.session_state["shared_log"] = log_content
 
-    # Initialize the log parser
-    try:
-        parser = ArnoldLogParser(log_content)
-    except Exception as e:
-        st.error(f"Failed to initialize log parser: {e}")
-        st.stop()
+    # Initialize the log parser with caching - only reparse if log content changed
+    if ("cached_log_content" not in st.session_state or
+        st.session_state["cached_log_content"] != log_content):
+        # Log content has changed, need to reparse
+        with st.spinner("Parsing Arnold log file... This may take a moment for large logs."):
+            try:
+                parser = ArnoldLogParser(log_content)
+                st.session_state["parser"] = parser
+                st.session_state["cached_log_content"] = log_content
+                st.session_state["stats_cached"] = False  # Invalidate stats cache
+            except Exception as e:
+                st.error(f"Failed to initialize log parser: {e}")
+                st.stop()
+    else:
+        # Use cached parser
+        parser = st.session_state["parser"]
 
     ########################################
     # Errors and Warnings
@@ -234,7 +406,13 @@ def main():
         st.write(render_stats["render_time"])
     with col2:
         st.subheader("Memory Used")
-        st.write(render_stats["memory_used"])
+        mem_used = render_stats["memory_used"]
+        # Try to extract numeric value for color coding
+        if mem_used != "Can't parse details from log.":
+            delta_val = get_performance_color("memory", mem_used)
+            st.metric("", mem_used, delta=delta_val, delta_color="off")
+        else:
+            st.write(mem_used)
     with col3:
         st.subheader("AOV Count")
         st.write(render_stats["aov_count"])
@@ -301,53 +479,121 @@ def main():
     # Scene Statistics
     ########################################
     st.header("Scene Statistics", divider=True)
-    # Parse log content
-    scene_info = parser.get_scene_info()
-    sample_info = parser.get_sample_info()
-    progress_info = parser.get_progress_info()
-    scene_creation = parser.get_scene_creation()
-    render_time_stats = parser.get_render_time()
-    memory_stats = parser.get_memory_stats()
-    ray_stats = parser.get_ray_stats()
-    shader_stats = parser.get_shader_stats()
-    geometry_stats = parser.get_geometry_stats()
-    texture_stats = parser.get_texture_stats()
+    # Parse log content - only show spinner if not cached
+    if "stats_cached" not in st.session_state or not st.session_state.get("stats_cached"):
+        with st.spinner("Extracting scene statistics..."):
+            scene_info = parser.get_scene_info()
+            sample_info = parser.get_sample_info()
+            progress_info = parser.get_progress_info()
+            scene_creation = parser.get_scene_creation()
+            render_time_stats = parser.get_render_time()
+            memory_stats = parser.get_memory_stats()
+            ray_stats = parser.get_ray_stats()
+            shader_stats = parser.get_shader_stats()
+            geometry_stats = parser.get_geometry_stats()
+            texture_stats = parser.get_texture_stats()
+            st.session_state["stats_cached"] = True
+    else:
+        scene_info = parser.get_scene_info()
+        sample_info = parser.get_sample_info()
+        progress_info = parser.get_progress_info()
+        scene_creation = parser.get_scene_creation()
+        render_time_stats = parser.get_render_time()
+        memory_stats = parser.get_memory_stats()
+        ray_stats = parser.get_ray_stats()
+        shader_stats = parser.get_shader_stats()
+        geometry_stats = parser.get_geometry_stats()
+        texture_stats = parser.get_texture_stats()
 
     # Node Init / Scene Contents
     st.subheader("Node Init / Scene Contents")
-    cols = st.columns(4)
-    cols[0].metric("Number of Lights", scene_info["no_of_lights"])
-    cols[1].metric("Number of Objects", scene_info["no_of_objects"])
-    cols[2].metric("Number of Alembics", scene_info["no_of_alembics"])
-    cols[3].metric("Node Init Time", scene_info["node_init_time"])
+    if has_data(scene_info, default_value=""):
+        cols = st.columns(4)
+        cols[0].metric("Number of Lights", scene_info["no_of_lights"] or "0")
+        cols[1].metric("Number of Objects", scene_info["no_of_objects"] or "0")
+        cols[2].metric("Number of Alembics", scene_info["no_of_alembics"] or "0")
+        cols[3].metric("Node Init Time", scene_info["node_init_time"] or "N/A")
+    else:
+        st.info("No scene initialization information found in log.")
 
     # Samples / Ray Depths
     st.subheader("Samples / Ray Depths")
-    cols = st.columns(4)
-    cols[0].metric("AA Samples", sample_info["aa"])
-    cols[1].metric("Diffuse", sample_info["diffuse"])
-    cols[2].metric("Specular", sample_info["specular"])
-    cols[3].metric("Transmission", sample_info["transmission"])
-    cols = st.columns(4)
-    cols[0].metric("Volume", sample_info["volume"])
-    cols[1].metric("Total", sample_info["total"])
-    cols[2].metric("BSSRDF", sample_info["bssrdf"])
-    cols[3].metric("Transparency", sample_info["transparency"])
+    if has_data(sample_info, default_value=""):
+        cols = st.columns(4)
+        cols[0].metric("AA Samples", sample_info["aa"] or "N/A")
+        cols[1].metric("Diffuse", sample_info["diffuse"] or "N/A")
+        cols[2].metric("Specular", sample_info["specular"] or "N/A")
+        cols[3].metric("Transmission", sample_info["transmission"] or "N/A")
+        cols = st.columns(4)
+        cols[0].metric("Volume", sample_info["volume"] or "N/A")
+        cols[1].metric("Total", sample_info["total"] or "N/A")
+        cols[2].metric("BSSRDF", sample_info["bssrdf"] or "N/A")
+        cols[3].metric("Transparency", sample_info["transparency"] or "N/A")
+    else:
+        st.info("No sampling information found in log. Enable detailed logging to see sample settings.")
 
     # Render Progress
     st.subheader("Render Progress")
-    display_bar_chart(
-        [progress_info],
-        "Rays Per Pixel",
-        "% of total ray count",
-    )
+    if progress_info:
+        display_bar_chart(
+            [progress_info],
+            "Rays Per Pixel",
+            "% of total ray count",
+        )
+    else:
+        st.info("No render progress information found in log.")
 
     # Scene creation time
     st.subheader("Scene Creation")
+    cols = st.columns(3)
+    cols[0].metric("Scene Creation", format_time(scene_creation['scene_creation']))
+    cols[1].metric("ASS Parsing", format_time(scene_creation['ass_parsing']))
+    cols[2].metric("Unaccounted", format_time(scene_creation['unaccounted']))
     display_bar_chart(scene_creation, "Time", "Time as percentage")
 
     # Render time
     st.subheader("Render Time")
+    with st.expander("View Detailed Render Time Breakdown"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.write("**Core Timing**")
+            st.metric(
+                "Frame Time",
+                format_time(render_time_stats['frame_time']),
+                delta=get_performance_color("frame time", render_time_stats['frame_time']),
+                delta_color="off"
+            )
+            st.metric(
+                "Rendering",
+                format_time(render_time_stats['rendering']),
+                delta=get_performance_color("rendering", render_time_stats['rendering']),
+                delta_color="off"
+            )
+            st.metric(
+                "Pixel Rendering",
+                format_time(render_time_stats['pixel_rendering']),
+                delta=get_performance_color("pixel rendering", render_time_stats['pixel_rendering']),
+                delta_color="off"
+            )
+            st.metric("Node Init", format_time(render_time_stats['node_init']))
+            st.metric("License Checkout", format_time(render_time_stats['license_checkout_time']))
+
+        with col2:
+            st.write("**Processing**")
+            st.metric("Mesh Processing", format_time(render_time_stats['mesh_processing']))
+            st.metric("Subdivision", format_time(render_time_stats['subdivision']))
+            st.metric("Displacement", format_time(render_time_stats['displacement']))
+            st.metric("Accel Building", format_time(render_time_stats['accel_building']))
+            st.metric("Importance Maps", format_time(render_time_stats['importance_maps']))
+
+        with col3:
+            st.write("**Overhead**")
+            st.metric("Sanity Checks", format_time(render_time_stats['sanity_checks']))
+            st.metric("Driver Init/Close", format_time(render_time_stats['driver_init_close']))
+            st.metric("Output Driver", format_time(render_time_stats['output_driver']))
+            st.metric("Threads Blocked", format_time(render_time_stats['threads_blocked']))
+            st.metric("Unaccounted", format_time(render_time_stats['unaccounted']))
+
     display_bar_chart(
         render_time_stats,
         "Render Time",
@@ -357,10 +603,68 @@ def main():
     # Memory Statistics
     st.subheader("Memory")
     cols = st.columns(4)
-    cols[0].metric("Peak CPU Memory used", f"{memory_stats['peak_CPU_memory_used']} MB" if memory_stats['peak_CPU_memory_used'] else "N/A")
-    cols[1].metric("Startup Memory used", f"{memory_stats['at_startup']} MB" if memory_stats['at_startup'] else "N/A")
-    cols[2].metric("Geometry Memory used", f"{memory_stats['geometry']} MB" if memory_stats['geometry'] else "N/A")
-    cols[3].metric("Texture Memory used", f"{memory_stats['texture_cache']} MB" if memory_stats['texture_cache'] else "N/A")
+    peak_mem_val = memory_stats['peak_CPU_memory_used']
+    cols[0].metric(
+        "Peak CPU Memory used",
+        format_memory(peak_mem_val) if peak_mem_val else "N/A",
+        delta=get_performance_color("memory", peak_mem_val) if peak_mem_val else None,
+        delta_color="off"
+    )
+    startup_mem_val = memory_stats['at_startup']
+    cols[1].metric(
+        "Startup Memory used",
+        format_memory(startup_mem_val) if startup_mem_val else "N/A",
+        delta=get_performance_color("memory", startup_mem_val) if startup_mem_val else None,
+        delta_color="off"
+    )
+    geo_mem_val = memory_stats['geometry']
+    cols[2].metric(
+        "Geometry Memory used",
+        format_memory(geo_mem_val) if geo_mem_val else "N/A",
+        delta=get_performance_color("memory", geo_mem_val) if geo_mem_val else None,
+        delta_color="off"
+    )
+    tex_mem_val = memory_stats['texture_cache']
+    cols[3].metric(
+        "Texture Memory used",
+        format_memory(tex_mem_val) if tex_mem_val else "N/A",
+        delta=get_performance_color("memory", tex_mem_val) if tex_mem_val else None,
+        delta_color="off"
+    )
+
+    # Detailed memory breakdown
+    with st.expander("View Detailed Memory Breakdown"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.write("**Buffers & Overhead**")
+            st.metric("AOV Samples", format_memory(memory_stats['AOV_samples']))
+            st.metric("Output Buffers", format_memory(memory_stats['output_buffers']))
+            st.metric("Framebuffers", format_memory(memory_stats['framebuffers']))
+            st.metric("Node Overhead", format_memory(memory_stats['node_overhead']))
+            st.metric("Message Passing", format_memory(memory_stats['message_passing']))
+            st.metric("Memory Pools", format_memory(memory_stats['memory_pools']))
+
+        with col2:
+            st.write("**Geometry Details**")
+            st.metric("Polymesh", format_memory(memory_stats['polymesh']))
+            st.metric("Vertices", format_memory(memory_stats['vertices']))
+            st.metric("Vertex Indices", format_memory(memory_stats['vertex_indices']))
+            st.metric("Packed Normals", format_memory(memory_stats['packed_normals']))
+            st.metric("Normal Indices", format_memory(memory_stats['normal_indices']))
+            st.metric("UV Coords", format_memory(memory_stats['uv_coords']))
+            st.metric("UV Coords Indices", format_memory(memory_stats['uv_coords_idxs']))
+            st.metric("Uniform Indices", format_memory(memory_stats['uniform_indices']))
+
+        with col3:
+            st.write("**Other**")
+            st.metric("Userdata", format_memory(memory_stats['userdata']))
+            st.metric("Subdivs", format_memory(memory_stats['subdivs']))
+            st.metric("Accel Structs", format_memory(memory_stats['accel_structs']))
+            st.metric("Skydome Importance Map", format_memory(memory_stats['skydome_importance_map']))
+            st.metric("Strings", format_memory(memory_stats['strings']))
+            st.metric("Profiler", format_memory(memory_stats['profiler']))
+            st.metric("Backtrace Handler", format_memory(memory_stats['backtrace_handler']))
+
     display_bar_chart(
         memory_stats,
         "Memory Used",
@@ -372,29 +676,41 @@ def main():
 
     # Ray Stats
     st.subheader("Rays")
-    display_bar_chart(ray_stats, "Rays", "Total rays per category")
+    if has_data(ray_stats):
+        display_bar_chart(ray_stats, "Rays", "Total rays per category")
+    else:
+        st.info("No ray statistics found in log. Enable detailed logging to see ray counts.")
 
     # Shader Stats
     st.subheader("Shaders")
-    display_bar_chart(shader_stats, "Shaders", "Shader calls per category.")
+    if has_data(shader_stats):
+        display_bar_chart(shader_stats, "Shaders", "Shader calls per category.")
+    else:
+        st.info("No shader statistics found in log. Enable detailed logging to see shader calls.")
 
     # Geometry statistics
     st.subheader("Geometry")
-    cols = st.columns(4)
-    cols[0].metric("Polymesh Count", geometry_stats["polymesh_count"])
-    cols[1].metric("Procedural Count", geometry_stats["proc_count"])
-    cols[2].metric("Triangle Count", geometry_stats["triangle_count"])
-    cols[3].metric("Subdivision Surfaces", geometry_stats["subdivision_surfaces"])
+    if has_data(geometry_stats):
+        cols = st.columns(4)
+        cols[0].metric("Polymesh Count", geometry_stats["polymesh_count"])
+        cols[1].metric("Procedural Count", geometry_stats["proc_count"])
+        cols[2].metric("Triangle Count", geometry_stats["triangle_count"])
+        cols[3].metric("Subdivision Surfaces", geometry_stats["subdivision_surfaces"])
+    else:
+        st.info("No geometry statistics found in log. Enable detailed logging to see geometry counts.")
 
     # Texture statistics
     st.subheader("Textures")
-    cols = st.columns(6)
-    cols[0].metric("Peak Cache Memory", texture_stats["peak_cache_memory"])
-    cols[1].metric("Pixel Data Read", texture_stats["pixel_data_read"])
-    cols[2].metric("Unique Images", texture_stats["unique_images"])
-    cols[3].metric("Duplicate Images", texture_stats["duplicate_images"])
-    cols[4].metric("Constant Value Images", texture_stats["constant_value_images"])
-    cols[5].metric("Broken/Invalid Images", texture_stats["broken_invalid_images"])
+    if has_data(texture_stats):
+        cols = st.columns(6)
+        cols[0].metric("Peak Cache Memory", texture_stats["peak_cache_memory"])
+        cols[1].metric("Pixel Data Read", texture_stats["pixel_data_read"])
+        cols[2].metric("Unique Images", texture_stats["unique_images"])
+        cols[3].metric("Duplicate Images", texture_stats["duplicate_images"])
+        cols[4].metric("Constant Value Images", texture_stats["constant_value_images"])
+        cols[5].metric("Broken/Invalid Images", texture_stats["broken_invalid_images"])
+    else:
+        st.info("No texture statistics found in log. Enable detailed logging to see texture info.")
 
     # Display Sidebar
     sidebar()
