@@ -32,6 +32,39 @@ def has_data(data_dict, default_value="Can't parse details from log."):
             return True
     return False
 
+def get_performance_color(metric_name, value):
+    """Get color indicator (delta) for performance metrics.
+
+    Returns a string for the delta parameter of st.metric():
+    - "🟢" for good performance
+    - "🟡" for moderate performance
+    - "🔴" for poor performance
+    """
+    try:
+        # Memory-based metrics (in MB)
+        if "memory" in metric_name.lower() or "mb" in str(value).lower():
+            mem_value = float(str(value).replace("MB", "").strip()) if isinstance(value, str) else float(value)
+            if mem_value < 1000:
+                return "🟢 Low"
+            elif mem_value < 5000:
+                return "🟡 Moderate"
+            else:
+                return "🔴 High"
+
+        # Time-based metrics (in seconds from render_time_stats)
+        elif metric_name.lower() in ["render time", "frame time", "rendering", "pixel rendering"]:
+            if value < 60:
+                return "🟢 Fast"
+            elif value < 300:
+                return "🟡 Moderate"
+            else:
+                return "🔴 Slow"
+
+    except (ValueError, TypeError, AttributeError):
+        pass
+
+    return None  # No color indicator
+
 def sidebar():
     """
     Create the sidebar for the app.
@@ -253,7 +286,13 @@ def main():
         st.write(render_stats["render_time"])
     with col2:
         st.subheader("Memory Used")
-        st.write(render_stats["memory_used"])
+        mem_used = render_stats["memory_used"]
+        # Try to extract numeric value for color coding
+        if mem_used != "Can't parse details from log.":
+            delta_val = get_performance_color("memory", mem_used)
+            st.metric("", mem_used, delta=delta_val, delta_color="off")
+        else:
+            st.write(mem_used)
     with col3:
         st.subheader("AOV Count")
         st.write(render_stats["aov_count"])
@@ -398,9 +437,24 @@ def main():
         col1, col2, col3 = st.columns(3)
         with col1:
             st.write("**Core Timing**")
-            st.metric("Frame Time", f"{render_time_stats['frame_time']:.2f}s")
-            st.metric("Rendering", f"{render_time_stats['rendering']:.2f}s")
-            st.metric("Pixel Rendering", f"{render_time_stats['pixel_rendering']:.2f}s")
+            st.metric(
+                "Frame Time",
+                f"{render_time_stats['frame_time']:.2f}s",
+                delta=get_performance_color("frame time", render_time_stats['frame_time']),
+                delta_color="off"
+            )
+            st.metric(
+                "Rendering",
+                f"{render_time_stats['rendering']:.2f}s",
+                delta=get_performance_color("rendering", render_time_stats['rendering']),
+                delta_color="off"
+            )
+            st.metric(
+                "Pixel Rendering",
+                f"{render_time_stats['pixel_rendering']:.2f}s",
+                delta=get_performance_color("pixel rendering", render_time_stats['pixel_rendering']),
+                delta_color="off"
+            )
             st.metric("Node Init", f"{render_time_stats['node_init']:.2f}s")
             st.metric("License Checkout", f"{render_time_stats['license_checkout_time']:.2f}s")
 
@@ -429,10 +483,34 @@ def main():
     # Memory Statistics
     st.subheader("Memory")
     cols = st.columns(4)
-    cols[0].metric("Peak CPU Memory used", f"{memory_stats['peak_CPU_memory_used']} MB" if memory_stats['peak_CPU_memory_used'] else "N/A")
-    cols[1].metric("Startup Memory used", f"{memory_stats['at_startup']} MB" if memory_stats['at_startup'] else "N/A")
-    cols[2].metric("Geometry Memory used", f"{memory_stats['geometry']} MB" if memory_stats['geometry'] else "N/A")
-    cols[3].metric("Texture Memory used", f"{memory_stats['texture_cache']} MB" if memory_stats['texture_cache'] else "N/A")
+    peak_mem_val = memory_stats['peak_CPU_memory_used']
+    cols[0].metric(
+        "Peak CPU Memory used",
+        f"{peak_mem_val} MB" if peak_mem_val else "N/A",
+        delta=get_performance_color("memory", peak_mem_val) if peak_mem_val else None,
+        delta_color="off"
+    )
+    startup_mem_val = memory_stats['at_startup']
+    cols[1].metric(
+        "Startup Memory used",
+        f"{startup_mem_val} MB" if startup_mem_val else "N/A",
+        delta=get_performance_color("memory", startup_mem_val) if startup_mem_val else None,
+        delta_color="off"
+    )
+    geo_mem_val = memory_stats['geometry']
+    cols[2].metric(
+        "Geometry Memory used",
+        f"{geo_mem_val} MB" if geo_mem_val else "N/A",
+        delta=get_performance_color("memory", geo_mem_val) if geo_mem_val else None,
+        delta_color="off"
+    )
+    tex_mem_val = memory_stats['texture_cache']
+    cols[3].metric(
+        "Texture Memory used",
+        f"{tex_mem_val} MB" if tex_mem_val else "N/A",
+        delta=get_performance_color("memory", tex_mem_val) if tex_mem_val else None,
+        delta_color="off"
+    )
 
     # Detailed memory breakdown
     with st.expander("View Detailed Memory Breakdown"):
