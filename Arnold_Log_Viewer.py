@@ -191,13 +191,15 @@ def main():
     if ("cached_log_content" not in st.session_state or
         st.session_state["cached_log_content"] != log_content):
         # Log content has changed, need to reparse
-        try:
-            parser = ArnoldLogParser(log_content)
-            st.session_state["parser"] = parser
-            st.session_state["cached_log_content"] = log_content
-        except Exception as e:
-            st.error(f"Failed to initialize log parser: {e}")
-            st.stop()
+        with st.spinner("Parsing Arnold log file... This may take a moment for large logs."):
+            try:
+                parser = ArnoldLogParser(log_content)
+                st.session_state["parser"] = parser
+                st.session_state["cached_log_content"] = log_content
+                st.session_state["stats_cached"] = False  # Invalidate stats cache
+            except Exception as e:
+                st.error(f"Failed to initialize log parser: {e}")
+                st.stop()
     else:
         # Use cached parser
         parser = st.session_state["parser"]
@@ -318,17 +320,31 @@ def main():
     # Scene Statistics
     ########################################
     st.header("Scene Statistics", divider=True)
-    # Parse log content
-    scene_info = parser.get_scene_info()
-    sample_info = parser.get_sample_info()
-    progress_info = parser.get_progress_info()
-    scene_creation = parser.get_scene_creation()
-    render_time_stats = parser.get_render_time()
-    memory_stats = parser.get_memory_stats()
-    ray_stats = parser.get_ray_stats()
-    shader_stats = parser.get_shader_stats()
-    geometry_stats = parser.get_geometry_stats()
-    texture_stats = parser.get_texture_stats()
+    # Parse log content - only show spinner if not cached
+    if "stats_cached" not in st.session_state or not st.session_state.get("stats_cached"):
+        with st.spinner("Extracting scene statistics..."):
+            scene_info = parser.get_scene_info()
+            sample_info = parser.get_sample_info()
+            progress_info = parser.get_progress_info()
+            scene_creation = parser.get_scene_creation()
+            render_time_stats = parser.get_render_time()
+            memory_stats = parser.get_memory_stats()
+            ray_stats = parser.get_ray_stats()
+            shader_stats = parser.get_shader_stats()
+            geometry_stats = parser.get_geometry_stats()
+            texture_stats = parser.get_texture_stats()
+            st.session_state["stats_cached"] = True
+    else:
+        scene_info = parser.get_scene_info()
+        sample_info = parser.get_sample_info()
+        progress_info = parser.get_progress_info()
+        scene_creation = parser.get_scene_creation()
+        render_time_stats = parser.get_render_time()
+        memory_stats = parser.get_memory_stats()
+        ray_stats = parser.get_ray_stats()
+        shader_stats = parser.get_shader_stats()
+        geometry_stats = parser.get_geometry_stats()
+        texture_stats = parser.get_texture_stats()
 
     # Node Init / Scene Contents
     st.subheader("Node Init / Scene Contents")
