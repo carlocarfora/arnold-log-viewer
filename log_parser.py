@@ -561,8 +561,6 @@ class ArnoldLogParser:
             "normal_indices": 0.0,
             "uv_coords": 0.0,
             "uv_coords_idxs": 0.0,
-            "P": 0.0,
-            "N": 0.0,
             "uniform_indices": 0.0,
             "userdata": 0.0,
             "subdivs": 0.0,
@@ -572,7 +570,6 @@ class ArnoldLogParser:
             "texture_cache": 0.0,
             "profiler": 0.0,
             "backtrace_handler": 0.0,
-            "unaccounted": 0.0,
         }
 
         # Iterate through each line and apply compiled regex patterns
