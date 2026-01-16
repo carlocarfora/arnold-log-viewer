@@ -352,10 +352,40 @@ def main():
 
     # Scene creation time
     st.subheader("Scene Creation")
+    cols = st.columns(3)
+    cols[0].metric("Scene Creation", f"{scene_creation['scene_creation']:.2f}s")
+    cols[1].metric("ASS Parsing", f"{scene_creation['ass_parsing']:.2f}s")
+    cols[2].metric("Unaccounted", f"{scene_creation['unaccounted']:.2f}s")
     display_bar_chart(scene_creation, "Time", "Time as percentage")
 
     # Render time
     st.subheader("Render Time")
+    with st.expander("View Detailed Render Time Breakdown"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.write("**Core Timing**")
+            st.metric("Frame Time", f"{render_time_stats['frame_time']:.2f}s")
+            st.metric("Rendering", f"{render_time_stats['rendering']:.2f}s")
+            st.metric("Pixel Rendering", f"{render_time_stats['pixel_rendering']:.2f}s")
+            st.metric("Node Init", f"{render_time_stats['node_init']:.2f}s")
+            st.metric("License Checkout", f"{render_time_stats['license_checkout_time']:.2f}s")
+
+        with col2:
+            st.write("**Processing**")
+            st.metric("Mesh Processing", f"{render_time_stats['mesh_processing']:.2f}s")
+            st.metric("Subdivision", f"{render_time_stats['subdivision']:.2f}s")
+            st.metric("Displacement", f"{render_time_stats['displacement']:.2f}s")
+            st.metric("Accel Building", f"{render_time_stats['accel_building']:.2f}s")
+            st.metric("Importance Maps", f"{render_time_stats['importance_maps']:.2f}s")
+
+        with col3:
+            st.write("**Overhead**")
+            st.metric("Sanity Checks", f"{render_time_stats['sanity_checks']:.2f}s")
+            st.metric("Driver Init/Close", f"{render_time_stats['driver_init_close']:.2f}s")
+            st.metric("Output Driver", f"{render_time_stats['output_driver']:.2f}s")
+            st.metric("Threads Blocked", f"{render_time_stats['threads_blocked']:.2f}s")
+            st.metric("Unaccounted", f"{render_time_stats['unaccounted']:.2f}s")
+
     display_bar_chart(
         render_time_stats,
         "Render Time",
@@ -369,6 +399,40 @@ def main():
     cols[1].metric("Startup Memory used", f"{memory_stats['at_startup']} MB" if memory_stats['at_startup'] else "N/A")
     cols[2].metric("Geometry Memory used", f"{memory_stats['geometry']} MB" if memory_stats['geometry'] else "N/A")
     cols[3].metric("Texture Memory used", f"{memory_stats['texture_cache']} MB" if memory_stats['texture_cache'] else "N/A")
+
+    # Detailed memory breakdown
+    with st.expander("View Detailed Memory Breakdown"):
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.write("**Buffers & Overhead**")
+            st.metric("AOV Samples", f"{memory_stats['AOV_samples']} MB")
+            st.metric("Output Buffers", f"{memory_stats['output_buffers']} MB")
+            st.metric("Framebuffers", f"{memory_stats['framebuffers']} MB")
+            st.metric("Node Overhead", f"{memory_stats['node_overhead']} MB")
+            st.metric("Message Passing", f"{memory_stats['message_passing']} MB")
+            st.metric("Memory Pools", f"{memory_stats['memory_pools']} MB")
+
+        with col2:
+            st.write("**Geometry Details**")
+            st.metric("Polymesh", f"{memory_stats['polymesh']} MB")
+            st.metric("Vertices", f"{memory_stats['vertices']} MB")
+            st.metric("Vertex Indices", f"{memory_stats['vertex_indices']} MB")
+            st.metric("Packed Normals", f"{memory_stats['packed_normals']} MB")
+            st.metric("Normal Indices", f"{memory_stats['normal_indices']} MB")
+            st.metric("UV Coords", f"{memory_stats['uv_coords']} MB")
+            st.metric("UV Coords Indices", f"{memory_stats['uv_coords_idxs']} MB")
+            st.metric("Uniform Indices", f"{memory_stats['uniform_indices']} MB")
+
+        with col3:
+            st.write("**Other**")
+            st.metric("Userdata", f"{memory_stats['userdata']} MB")
+            st.metric("Subdivs", f"{memory_stats['subdivs']} MB")
+            st.metric("Accel Structs", f"{memory_stats['accel_structs']} MB")
+            st.metric("Skydome Importance Map", f"{memory_stats['skydome_importance_map']} MB")
+            st.metric("Strings", f"{memory_stats['strings']} MB")
+            st.metric("Profiler", f"{memory_stats['profiler']} MB")
+            st.metric("Backtrace Handler", f"{memory_stats['backtrace_handler']} MB")
+
     display_bar_chart(
         memory_stats,
         "Memory Used",
