@@ -105,16 +105,20 @@ def display_bar_chart(
     convert_values=True,
 ):
     """
-    Display a bar chart using built in Streamlit chart.
+    Display an interactive bar chart using Plotly with tooltips and download.
     Parameters:
-    labels (list): The labels for the chart.
-    values (list): The values for the chart.
-    x_label (str): The x-axis label.
+    values: Dictionary or DataFrame of values
+    _index (str): The index label
+    _x_label (str): The x-axis label
+    _y_label (str): The y-axis label
+    _stack (str): Stack mode (not used in Plotly version)
+    _horizontal (bool): Whether to display horizontal bars
+    convert_values (bool): Whether to convert dict to DataFrame
     """
     if convert_values:
         df = pd.DataFrame(values, index=[str(_index)])
     else:
-        df = values
+        df = values if isinstance(values, pd.DataFrame) else pd.DataFrame(values)
 
     # Ensure all values are numeric (convert to float if possible)
     if isinstance(df, pd.DataFrame):
@@ -124,38 +128,109 @@ def display_bar_chart(
             except:
                 pass
 
-    st.bar_chart(
-        df,
-        x_label=_x_label,
-        y_label=_y_label,
-        horizontal=_horizontal,
-        stack=_stack)
+    # Create Plotly bar chart with better colors and interactivity
+    if _horizontal:
+        # Horizontal bar chart
+        fig = go.Figure()
+        for idx, row in df.iterrows():
+            fig.add_trace(go.Bar(
+                y=df.columns.tolist(),
+                x=row.tolist(),
+                orientation='h',
+                name=str(idx),
+                marker=dict(
+                    color=row.tolist(),
+                    colorscale='Viridis',
+                    showscale=True,
+                    colorbar=dict(title=_y_label or "Value")
+                ),
+                hovertemplate='<b>%{y}</b><br>' +
+                             f'{_y_label or "Value"}: %{{x:.2f}}<br>' +
+                             '<extra></extra>'
+            ))
+
+        fig.update_layout(
+            xaxis_title=_y_label or "Value",
+            yaxis_title=_x_label or "Category",
+            hovermode='closest',
+            showlegend=False,
+            height=max(400, len(df.columns) * 25),
+        )
+    else:
+        # Vertical bar chart
+        fig = go.Figure()
+        for idx, row in df.iterrows():
+            fig.add_trace(go.Bar(
+                x=df.columns.tolist(),
+                y=row.tolist(),
+                name=str(idx),
+                marker=dict(
+                    color=row.tolist(),
+                    colorscale='Viridis',
+                    showscale=True
+                ),
+                hovertemplate='<b>%{x}</b><br>' +
+                             f'{_y_label or "Value"}: %{{y:.2f}}<br>' +
+                             '<extra></extra>'
+            ))
+
+        fig.update_layout(
+            xaxis_title=_x_label or "Category",
+            yaxis_title=_y_label or "Value",
+            hovermode='closest',
+            showlegend=False,
+        )
+
+    # Add download button config
+    config = {
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': f'arnold_log_{_x_label.lower().replace(" ", "_")}',
+            'height': 800,
+            'width': 1200,
+            'scale': 2
+        },
+        'displayModeBar': True,
+        'displaylogo': False
+    }
+
+    st.plotly_chart(fig, use_container_width=True, config=config)
 
 
 def display_donut_chart(labels, values):
     """
-    Display a donut chart using Plotly.
+    Display an interactive donut chart using Plotly with tooltips and download.
 
     Parameters:
     labels (list): The labels for the chart.
     values (list): The values for the chart.
     """
-    # Create the donut chart
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.8)])
-
-    # Customize the layout to place the legend on the side
-    fig.update_layout(
-        width=300,  # Reduce width
-        height=300,
-        margin=dict(
-            t=5,  # Top padding
-            b=5,  # Bottom padding
-            l=5,  # Left padding
-            r=5,  # Right padding
+    # Create the donut chart with better colors
+    fig = go.Figure(data=[go.Pie(
+        labels=labels,
+        values=values,
+        hole=0.8,
+        marker=dict(
+            colors=['#636EFA', '#EF553B', '#00CC96', '#AB63FA', '#FFA15A',
+                   '#19D3F3', '#FF6692', '#B6E880', '#FF97FF', '#FECB52'],
+            line=dict(color='#FFFFFF', width=2)
         ),
+        hovertemplate='<b>%{label}</b><br>' +
+                     'Value: %{value}<br>' +
+                     'Percentage: %{percent}<br>' +
+                     '<extra></extra>',
+        textposition='inside',
+        textinfo='percent+label'
+    )])
+
+    # Customize the layout
+    fig.update_layout(
+        width=300,
+        height=300,
+        margin=dict(t=5, b=5, l=5, r=5),
         legend=dict(
-            x=1,  # Position the legend on the right
-            y=0.8,  # Center the legend vertically
+            x=1,
+            y=0.8,
             traceorder="normal",
             orientation="h",
             font=dict(size=15),
@@ -164,9 +239,22 @@ def display_donut_chart(labels, values):
         ),
     )
 
-    # Display the chart in Streamlit
+    # Add download button config
+    config = {
+        'toImageButtonOptions': {
+            'format': 'png',
+            'filename': 'arnold_log_donut_chart',
+            'height': 800,
+            'width': 800,
+            'scale': 2
+        },
+        'displayModeBar': True,
+        'displaylogo': False
+    }
+
+    # Display the chart
     with st.empty():
-        st.plotly_chart(fig, use_container_width=False)
+        st.plotly_chart(fig, use_container_width=False, config=config)
 
 
 # PAGE CONFIGURATION
