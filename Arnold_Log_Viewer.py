@@ -178,12 +178,20 @@ def main():
     # Session state variable to share log file
     st.session_state["shared_log"] = log_content
 
-    # Initialize the log parser
-    try:
-        parser = ArnoldLogParser(log_content)
-    except Exception as e:
-        st.error(f"Failed to initialize log parser: {e}")
-        st.stop()
+    # Initialize the log parser with caching - only reparse if log content changed
+    if ("cached_log_content" not in st.session_state or
+        st.session_state["cached_log_content"] != log_content):
+        # Log content has changed, need to reparse
+        try:
+            parser = ArnoldLogParser(log_content)
+            st.session_state["parser"] = parser
+            st.session_state["cached_log_content"] = log_content
+        except Exception as e:
+            st.error(f"Failed to initialize log parser: {e}")
+            st.stop()
+    else:
+        # Use cached parser
+        parser = st.session_state["parser"]
 
     ########################################
     # Errors and Warnings
