@@ -49,6 +49,21 @@ def format_time(seconds):
     remaining_minutes = minutes % 60
     return f"{hours}h {remaining_minutes}m {remaining_seconds:.2f}s"
 
+def format_memory(megabytes):
+    """Format memory in appropriate units (MB or GB).
+    Args:
+        megabytes (float): Memory size in megabytes
+    Returns:
+        str: Formatted memory string
+    """
+    if megabytes == 0:
+        return "0 MB"
+    elif megabytes < 1024:
+        return f"{megabytes:.2f} MB"
+    else:
+        gigabytes = megabytes / 1024
+        return f"{gigabytes:.2f} GB"
+
 def get_performance_color(metric_name, value):
     """Get color indicator (delta) for performance metrics.
 
@@ -591,28 +606,28 @@ def main():
     peak_mem_val = memory_stats['peak_CPU_memory_used']
     cols[0].metric(
         "Peak CPU Memory used",
-        f"{peak_mem_val} MB" if peak_mem_val else "N/A",
+        format_memory(peak_mem_val) if peak_mem_val else "N/A",
         delta=get_performance_color("memory", peak_mem_val) if peak_mem_val else None,
         delta_color="off"
     )
     startup_mem_val = memory_stats['at_startup']
     cols[1].metric(
         "Startup Memory used",
-        f"{startup_mem_val} MB" if startup_mem_val else "N/A",
+        format_memory(startup_mem_val) if startup_mem_val else "N/A",
         delta=get_performance_color("memory", startup_mem_val) if startup_mem_val else None,
         delta_color="off"
     )
     geo_mem_val = memory_stats['geometry']
     cols[2].metric(
         "Geometry Memory used",
-        f"{geo_mem_val} MB" if geo_mem_val else "N/A",
+        format_memory(geo_mem_val) if geo_mem_val else "N/A",
         delta=get_performance_color("memory", geo_mem_val) if geo_mem_val else None,
         delta_color="off"
     )
     tex_mem_val = memory_stats['texture_cache']
     cols[3].metric(
         "Texture Memory used",
-        f"{tex_mem_val} MB" if tex_mem_val else "N/A",
+        format_memory(tex_mem_val) if tex_mem_val else "N/A",
         delta=get_performance_color("memory", tex_mem_val) if tex_mem_val else None,
         delta_color="off"
     )
@@ -622,33 +637,33 @@ def main():
         col1, col2, col3 = st.columns(3)
         with col1:
             st.write("**Buffers & Overhead**")
-            st.metric("AOV Samples", f"{memory_stats['AOV_samples']} MB")
-            st.metric("Output Buffers", f"{memory_stats['output_buffers']} MB")
-            st.metric("Framebuffers", f"{memory_stats['framebuffers']} MB")
-            st.metric("Node Overhead", f"{memory_stats['node_overhead']} MB")
-            st.metric("Message Passing", f"{memory_stats['message_passing']} MB")
-            st.metric("Memory Pools", f"{memory_stats['memory_pools']} MB")
+            st.metric("AOV Samples", format_memory(memory_stats['AOV_samples']))
+            st.metric("Output Buffers", format_memory(memory_stats['output_buffers']))
+            st.metric("Framebuffers", format_memory(memory_stats['framebuffers']))
+            st.metric("Node Overhead", format_memory(memory_stats['node_overhead']))
+            st.metric("Message Passing", format_memory(memory_stats['message_passing']))
+            st.metric("Memory Pools", format_memory(memory_stats['memory_pools']))
 
         with col2:
             st.write("**Geometry Details**")
-            st.metric("Polymesh", f"{memory_stats['polymesh']} MB")
-            st.metric("Vertices", f"{memory_stats['vertices']} MB")
-            st.metric("Vertex Indices", f"{memory_stats['vertex_indices']} MB")
-            st.metric("Packed Normals", f"{memory_stats['packed_normals']} MB")
-            st.metric("Normal Indices", f"{memory_stats['normal_indices']} MB")
-            st.metric("UV Coords", f"{memory_stats['uv_coords']} MB")
-            st.metric("UV Coords Indices", f"{memory_stats['uv_coords_idxs']} MB")
-            st.metric("Uniform Indices", f"{memory_stats['uniform_indices']} MB")
+            st.metric("Polymesh", format_memory(memory_stats['polymesh']))
+            st.metric("Vertices", format_memory(memory_stats['vertices']))
+            st.metric("Vertex Indices", format_memory(memory_stats['vertex_indices']))
+            st.metric("Packed Normals", format_memory(memory_stats['packed_normals']))
+            st.metric("Normal Indices", format_memory(memory_stats['normal_indices']))
+            st.metric("UV Coords", format_memory(memory_stats['uv_coords']))
+            st.metric("UV Coords Indices", format_memory(memory_stats['uv_coords_idxs']))
+            st.metric("Uniform Indices", format_memory(memory_stats['uniform_indices']))
 
         with col3:
             st.write("**Other**")
-            st.metric("Userdata", f"{memory_stats['userdata']} MB")
-            st.metric("Subdivs", f"{memory_stats['subdivs']} MB")
-            st.metric("Accel Structs", f"{memory_stats['accel_structs']} MB")
-            st.metric("Skydome Importance Map", f"{memory_stats['skydome_importance_map']} MB")
-            st.metric("Strings", f"{memory_stats['strings']} MB")
-            st.metric("Profiler", f"{memory_stats['profiler']} MB")
-            st.metric("Backtrace Handler", f"{memory_stats['backtrace_handler']} MB")
+            st.metric("Userdata", format_memory(memory_stats['userdata']))
+            st.metric("Subdivs", format_memory(memory_stats['subdivs']))
+            st.metric("Accel Structs", format_memory(memory_stats['accel_structs']))
+            st.metric("Skydome Importance Map", format_memory(memory_stats['skydome_importance_map']))
+            st.metric("Strings", format_memory(memory_stats['strings']))
+            st.metric("Profiler", format_memory(memory_stats['profiler']))
+            st.metric("Backtrace Handler", format_memory(memory_stats['backtrace_handler']))
 
     display_bar_chart(
         memory_stats,
