@@ -160,15 +160,50 @@ class ArnoldLogParser:
             if len(parts) == 2:
                 # MM:SS.ss
                 minutes, seconds = parts
-                return minutes * 60 + seconds
+                result = minutes * 60 + seconds
             elif len(parts) == 3:
                 # HH:MM:SS.ss
                 hours, minutes, seconds = parts
-                return hours * 3600 + minutes * 60 + seconds
+                result = hours * 3600 + minutes * 60 + seconds
             else:
                 return 0.0
+
+            # Validate: time should be non-negative
+            return max(0.0, result)
         except (ValueError, AttributeError):
             return 0.0
+
+    def validate_float(self, value: float, min_val: float = 0.0, max_val: float = None) -> float:
+        """Validate and clamp a float value to specified bounds.
+        Args:
+            value (float): Value to validate
+            min_val (float): Minimum allowed value (default 0.0)
+            max_val (float): Maximum allowed value (default None = no max)
+        Returns:
+            float: Validated and clamped value
+        """
+        try:
+            val = float(value)
+            val = max(min_val, val)
+            if max_val is not None:
+                val = min(max_val, val)
+            return val
+        except (ValueError, TypeError):
+            return min_val
+
+    def validate_int(self, value: int, min_val: int = 0) -> int:
+        """Validate and clamp an integer value.
+        Args:
+            value (int): Value to validate
+            min_val (int): Minimum allowed value (default 0)
+        Returns:
+            int: Validated and clamped integer
+        """
+        try:
+            val = int(value)
+            return max(min_val, val)
+        except (ValueError, TypeError):
+            return min_val
 
     def get_render_info(self) -> Dict[str, str]:
         """Get render information."""
@@ -579,7 +614,8 @@ class ArnoldLogParser:
                     match = self.PATTERNS[key].search(line)
                     if match:
                         try:
-                            data[key] = float(match.group(1))
+                            # Validate memory values (must be >= 0)
+                            data[key] = self.validate_float(float(match.group(1)), min_val=0.0)
                         except ValueError:
                             pass  # Keep default 0.0 if conversion fails
 
@@ -599,19 +635,19 @@ class ArnoldLogParser:
             # Camera
             match = self.PATTERNS["camera_rays"].search(line)
             if match:
-                data["camera"] = int(match.group(1))
+                data["camera"] = self.validate_int(int(match.group(1)))
             # Shadow
             match = self.PATTERNS["shadow_rays"].search(line)
             if match:
-                data["shadow"] = int(match.group(1))
+                data["shadow"] = self.validate_int(int(match.group(1)))
             # Specular Reflect
             match = self.PATTERNS["specular_reflect"].search(line)
             if match:
-                data["specular_reflect"] = int(match.group(1))
+                data["specular_reflect"] = self.validate_int(int(match.group(1)))
             # Specular Transmit
             match = self.PATTERNS["specular_transmit"].search(line)
             if match:
-                data["specular_transmit"] = int(match.group(1))
+                data["specular_transmit"] = self.validate_int(int(match.group(1)))
 
         return data
 
@@ -632,7 +668,8 @@ class ArnoldLogParser:
                     match = self.PATTERNS[key].search(line)
                     if match:
                         try:
-                            data[key] = int(match.group(1))
+                            # Validate shader counts (must be >= 0)
+                            data[key] = self.validate_int(int(match.group(1)))
                         except ValueError:
                             pass
 
@@ -654,7 +691,8 @@ class ArnoldLogParser:
                     match = self.PATTERNS[key].search(line)
                     if match:
                         try:
-                            data[key] = int(match.group(1))
+                            # Validate geometry counts (must be >= 0)
+                            data[key] = self.validate_int(int(match.group(1)))
                         except ValueError:
                             pass
 
